@@ -69,14 +69,12 @@
 
   /* Datetime */
   .dt-hint{font-size:10px;color:var(--m);margin-bottom:8px;}
-  .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
-  .dt-field{display:flex;flex-direction:column;gap:3px;}
+  .dt-grid{display:grid;grid-template-columns:1fr 72px 72px;gap:6px;margin-bottom:4px;}
+  .dt-field{display:flex;flex-direction:column;gap:4px;}
   .dt-label{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
-  .dt-input{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--txt);outline:none;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;}
-  .dt-input:focus{border-color:var(--ac);}
-  .dt-select{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--txt);outline:none;width:100%;cursor:pointer;}
+  .dt-select{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:7px 8px;color:var(--txt);outline:none;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A7A88'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
   .dt-select:focus{border-color:var(--ac);}
-  .dt-select option{background:var(--s2);color:var(--txt);}
+  .dt-select option{background:#1E1E24;color:#F0EFE8;}
 
   /* Send button */
   .btn-send{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;margin-bottom:6px;}
@@ -92,12 +90,14 @@
 
   /* Pending jobs list */
   #jobs-section{padding:0 10px 10px;}
-  .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;padding-top:4px;border-top:1px solid var(--b);}
-  .job-item{display:flex;align-items:flex-start;gap:7px;padding:6px 0;border-bottom:1px solid var(--b);font-size:11px;}
+  .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;padding-top:10px;}
+  .job-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b);}
   .job-item:last-child{border-bottom:none;}
-  .job-time{color:var(--ac2);font-weight:500;flex-shrink:0;min-width:68px;}
-  .job-text{color:var(--txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .job-cancel{background:none;border:none;color:var(--m);cursor:pointer;font-size:13px;padding:1px 3px;border-radius:3px;flex-shrink:0;}
+  .job-dot{width:7px;height:7px;border-radius:50%;background:var(--ac);flex-shrink:0;}
+  .job-body{flex:1;min-width:0;}
+  .job-text{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .job-time{font-size:10px;color:var(--m);margin-top:1px;}
+  .job-cancel{background:none;border:none;color:var(--m);cursor:pointer;font-size:15px;padding:1px 4px;border-radius:3px;flex-shrink:0;line-height:1;}
   .job-cancel:hover{background:var(--rb);color:var(--rt);}
 
   /* Revoke */
@@ -135,14 +135,18 @@
 
   <div class="sec">
     <div class="sl">Send at</div>
-    <div class="dt-row">
+    <div class="dt-grid">
       <div class="dt-field">
         <span class="dt-label">Day</span>
         <select class="dt-select" id="dt-day" onchange="validate()"></select>
       </div>
       <div class="dt-field">
-        <span class="dt-label">Time</span>
-        <select class="dt-select" id="dt-time" onchange="validate()"></select>
+        <span class="dt-label">Hour</span>
+        <select class="dt-select" id="dt-hour" onchange="validate()"></select>
+      </div>
+      <div class="dt-field">
+        <span class="dt-label">Min</span>
+        <select class="dt-select" id="dt-min" onchange="validate()"></select>
       </div>
     </div>
     <div class="dt-hint">Max 7 days ahead · your local timezone</div>
@@ -152,7 +156,7 @@
   <div class="feedback" id="feedback"></div>
 
   <div id="jobs-section" style="display:none">
-    <div class="jobs-title">Scheduled for this card</div>
+    <div class="jobs-title">Scheduled comments</div>
     <div id="jobs-list"></div>
   </div>
 
@@ -429,8 +433,11 @@ async function loadJobs() {
     .sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt))
     .map(j => `
       <div class="job-item">
-        <div class="job-time">${fmtTime(j.sendAt)}</div>
-        <div class="job-text" title="${j.text.replace(/"/g,'&quot;')}">${j.text}</div>
+        <div class="job-dot"></div>
+        <div class="job-body">
+          <div class="job-text">${j.text.replace(/</g,'&lt;')}</div>
+          <div class="job-time">${fmtTime(j.sendAt)}</div>
+        </div>
         <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
       </div>
     `).join('');
@@ -478,52 +485,52 @@ function doAuth() {
 // ── Custom datetime picker ────────────────────────────────
 function initDatePicker() {
   const now = new Date();
-  // Round up to next 5-min slot
   let h = now.getHours();
   let m = Math.ceil((now.getMinutes() + 1) / 5) * 5;
   if (m >= 60) { m = 0; h = (h + 1) % 24; }
 
-  // Populate day select: today (only if future time available) + next 7 days
+  // Day
   const dayEl = document.getElementById('dt-day');
   dayEl.innerHTML = '';
   for (let i = 0; i <= 7; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
-    d.setHours(0, 0, 0, 0);
-    if (i === 0 && h === 0 && m === 0) continue; // skip today if past midnight
     const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' :
       d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = label;
-    if (i === (h === 0 && m === 0 ? 1 : 0)) opt.selected = true;
     dayEl.appendChild(opt);
   }
-  // Default to tomorrow if today would require 00:00
-  if (dayEl.options[0]?.value === '0') {
-    dayEl.value = '0';
-  } else {
-    dayEl.value = '1';
+  dayEl.value = '0';
+
+  // Hour
+  const hourEl = document.getElementById('dt-hour');
+  hourEl.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = String(i).padStart(2, '0');
+    if (i === h) opt.selected = true;
+    hourEl.appendChild(opt);
   }
 
-  // Populate time select: every 5 min, full 24h
-  const timeEl = document.getElementById('dt-time');
-  timeEl.innerHTML = '';
-  for (let th = 0; th < 24; th++) {
-    for (let tm = 0; tm < 60; tm += 5) {
-      const opt = document.createElement('option');
-      opt.value = `${th}:${tm}`;
-      const label = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
-      opt.textContent = label;
-      if (th === h && tm === m) opt.selected = true;
-      timeEl.appendChild(opt);
-    }
+  // Min
+  const minEl = document.getElementById('dt-min');
+  minEl.innerHTML = '';
+  for (let i = 0; i < 60; i += 5) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = String(i).padStart(2, '0');
+    if (i === m) opt.selected = true;
+    minEl.appendChild(opt);
   }
 }
 
 function getPickerDate() {
-  const dayOffset = parseInt(document.getElementById('dt-day').value) || 0;
-  const [h, m]    = (document.getElementById('dt-time').value || '9:0').split(':').map(Number);
+  const dayOffset = parseInt(document.getElementById('dt-day').value)  || 0;
+  const h         = parseInt(document.getElementById('dt-hour').value) || 0;
+  const m         = parseInt(document.getElementById('dt-min').value)  || 0;
   const d = new Date();
   d.setDate(d.getDate() + dayOffset);
   d.setHours(h, m, 0, 0);
