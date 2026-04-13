@@ -14,8 +14,8 @@
     --gr:#00B894;--rb:rgba(214,48,49,0.14);--rt:#FF7675;
     --f:'Inter',sans-serif;
   }
-  html{background:var(--bg);}
-  body{font-family:var(--f);background:var(--bg);color:var(--txt);width:268px;padding:0;}
+  html,body{background:var(--bg);height:100%;}
+  body{font-family:var(--f);background:var(--bg);color:var(--txt);width:268px;padding:0;display:flex;flex-direction:column;overflow:hidden;}
 
   /* Auth prompt */
   .auth-wrap{padding:14px;}
@@ -25,19 +25,19 @@
   .btn-auth:hover{background:#7C6AF0;}
 
   /* Card chip */
-  .ca{padding:10px 10px 0;}
+  .ca{padding:10px 12px 0;}
   .cc{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:5px 9px;margin-bottom:8px;}
   .cd{width:6px;height:6px;border-radius:50%;background:var(--ac);flex-shrink:0;}
   .cn{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* Member chip */
-  .member-chip{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding:6px 9px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;}
+  .member-chip{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding:6px 9px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;margin-left:0;margin-right:0;}
   .mc-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:white;flex-shrink:0;}
   .mc-name{font-size:12px;font-weight:500;}
 
   /* Section labels */
   .sl{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;}
-  .sec{padding:0 10px 9px;}
+  .sec{padding:0 12px 9px;}
 
   /* Textarea with @mention support */
   .ta-wrap{position:relative;}
@@ -69,12 +69,27 @@
 
   /* Datetime */
   .dt-hint{font-size:10px;color:var(--m);margin-bottom:8px;}
-  .dt-grid{display:grid;grid-template-columns:1fr 72px 72px;gap:6px;margin-bottom:4px;}
-  .dt-field{display:flex;flex-direction:column;gap:4px;}
+  .dt-grid{display:grid;grid-template-columns:1fr 68px 68px;gap:6px;margin-bottom:4px;}
+  .dt-field{display:flex;flex-direction:column;gap:4px;position:relative;}
   .dt-label{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
-  .dt-select{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:7px 8px;color:var(--txt);outline:none;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A7A88'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
-  .dt-select:focus{border-color:var(--ac);}
-  .dt-select option{background:#1E1E24;color:#F0EFE8;}
+
+  /* Custom select trigger */
+  .dt-select-wrap{position:relative;}
+  .dt-select-val{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 28px 7px 10px;color:var(--txt);cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dt-select-wrap.open .dt-select-val{border-color:var(--ac);border-radius:8px 8px 0 0;}
+  .dt-select-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--m);font-size:10px;}
+
+  /* Dropdown panel */
+  .dt-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--ac);border-top:none;border-radius:0 0 10px 10px;z-index:100;overflow:hidden;}
+  .dt-select-wrap.open .dt-dropdown{display:block;}
+  .dt-dropdown-inner{max-height:160px;overflow-y:auto;padding:4px 0;}
+  .dt-dropdown-inner::-webkit-scrollbar{width:4px;}
+  .dt-dropdown-inner::-webkit-scrollbar-track{background:transparent;}
+  .dt-dropdown-inner::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px;}
+  .dt-dropdown-inner::-webkit-scrollbar-thumb:hover{background:var(--ac);}
+  .dt-opt{padding:7px 12px;font-size:12px;color:var(--m);cursor:pointer;transition:background .1s,color .1s;}
+  .dt-opt:hover{background:rgba(108,92,231,.12);color:var(--txt);}
+  .dt-opt.sel{color:var(--ac2);font-weight:500;}
 
   /* Send button */
   .btn-send{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;margin-bottom:6px;}
@@ -88,9 +103,14 @@
   .feedback.ok{display:block;background:rgba(0,184,148,.12);color:var(--gr);border:1px solid rgba(0,184,148,.25);}
   .feedback.err{display:block;background:var(--rb);color:var(--rt);border:1px solid rgba(214,48,49,.22);}
 
-  /* Pending jobs list */
-  #jobs-section{padding:0 10px 10px;}
-  .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;padding-top:10px;}
+  /* Pending jobs list — scrollable area */
+  #jobs-section{flex:1;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid var(--b);min-height:0;}
+  .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:8px 12px 6px;flex-shrink:0;}
+  #jobs-list{flex:1;overflow-y:auto;padding:0 12px 10px;}
+  #jobs-list::-webkit-scrollbar{width:4px;}
+  #jobs-list::-webkit-scrollbar-track{background:transparent;}
+  #jobs-list::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px;}
+  #jobs-list::-webkit-scrollbar-thumb:hover{background:var(--ac);}
   .job-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b);}
   .job-item:last-child{border-bottom:none;}
   .job-dot{width:7px;height:7px;border-radius:50%;background:var(--ac);flex-shrink:0;}
@@ -101,7 +121,7 @@
   .job-cancel:hover{background:var(--rb);color:var(--rt);}
 
   /* Revoke */
-  .revoke-row{padding:6px 10px 10px;text-align:center;}
+  .revoke-row{padding:6px 12px 12px;text-align:center;flex-shrink:0;}
   .btn-revoke{background:none;border:none;color:var(--m);font-size:10px;font-family:var(--f);cursor:pointer;text-decoration:underline;}
   .btn-revoke:hover{color:var(--rt);}
 </style>
@@ -116,7 +136,7 @@
 </div>
 
 <!-- Main UI -->
-<div id="main-section" style="display:none">
+<div id="main-section" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
   <div class="ca">
     <div class="cc"><div class="cd"></div><div class="cn" id="card-name">Loading…</div></div>
     <div class="member-chip" id="member-chip" style="display:none">
@@ -138,15 +158,27 @@
     <div class="dt-grid">
       <div class="dt-field">
         <span class="dt-label">Day</span>
-        <select class="dt-select" id="dt-day" onchange="validate()"></select>
+        <div class="dt-select-wrap" id="wrap-day">
+          <div class="dt-select-val" id="val-day" onclick="toggleDt('day')">Today</div>
+          <span class="dt-select-arrow">▾</span>
+          <div class="dt-dropdown"><div class="dt-dropdown-inner" id="dd-day"></div></div>
+        </div>
       </div>
       <div class="dt-field">
         <span class="dt-label">Hour</span>
-        <select class="dt-select" id="dt-hour" onchange="validate()"></select>
+        <div class="dt-select-wrap" id="wrap-hour">
+          <div class="dt-select-val" id="val-hour" onclick="toggleDt('hour')">09</div>
+          <span class="dt-select-arrow">▾</span>
+          <div class="dt-dropdown"><div class="dt-dropdown-inner" id="dd-hour"></div></div>
+        </div>
       </div>
       <div class="dt-field">
         <span class="dt-label">Min</span>
-        <select class="dt-select" id="dt-min" onchange="validate()"></select>
+        <div class="dt-select-wrap" id="wrap-min">
+          <div class="dt-select-val" id="val-min" onclick="toggleDt('min')">00</div>
+          <span class="dt-select-arrow">▾</span>
+          <div class="dt-dropdown"><div class="dt-dropdown-inner" id="dd-min"></div></div>
+        </div>
       </div>
     </div>
     <div class="dt-hint">Max 7 days ahead · your local timezone</div>
@@ -226,7 +258,7 @@ async function init() {
 
 function showMain() {
   document.getElementById('auth-section').style.display = 'none';
-  document.getElementById('main-section').style.display = 'block';
+  document.getElementById('main-section').style.display = 'flex';
 
   // Member chip
   const chip = document.getElementById('member-chip');
@@ -483,57 +515,89 @@ function doAuth() {
 }
 
 // ── Custom datetime picker ────────────────────────────────
+let _dtDay = 0, _dtH = 9, _dtM = 0;
+
 function initDatePicker() {
   const now = new Date();
-  let h = now.getHours();
-  let m = Math.ceil((now.getMinutes() + 1) / 5) * 5;
-  if (m >= 60) { m = 0; h = (h + 1) % 24; }
+  _dtH = now.getHours();
+  _dtM = Math.ceil((now.getMinutes() + 1) / 5) * 5;
+  if (_dtM >= 60) { _dtM = 0; _dtH = (_dtH + 1) % 24; }
+  _dtDay = 0;
 
-  // Day
-  const dayEl = document.getElementById('dt-day');
-  dayEl.innerHTML = '';
+  // Day options
+  const ddDay = document.getElementById('dd-day');
+  ddDay.innerHTML = '';
   for (let i = 0; i <= 7; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + i);
+    const d = new Date(now); d.setDate(d.getDate() + i);
     const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' :
       d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = label;
-    dayEl.appendChild(opt);
+    const el = document.createElement('div');
+    el.className = 'dt-opt' + (i === _dtDay ? ' sel' : '');
+    el.textContent = label;
+    el.onclick = () => { _dtDay = i; closeDt(); document.getElementById('val-day').textContent = label; validate(); };
+    ddDay.appendChild(el);
   }
-  dayEl.value = '0';
+  document.getElementById('val-day').textContent = 'Today';
 
-  // Hour
-  const hourEl = document.getElementById('dt-hour');
-  hourEl.innerHTML = '';
+  // Hour options
+  const ddHour = document.getElementById('dd-hour');
+  ddHour.innerHTML = '';
   for (let i = 0; i < 24; i++) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = String(i).padStart(2, '0');
-    if (i === h) opt.selected = true;
-    hourEl.appendChild(opt);
+    const label = String(i).padStart(2, '0');
+    const el = document.createElement('div');
+    el.className = 'dt-opt' + (i === _dtH ? ' sel' : '');
+    el.textContent = label;
+    el.onclick = () => { _dtH = i; closeDt(); document.getElementById('val-hour').textContent = label; validate(); };
+    ddHour.appendChild(el);
   }
+  document.getElementById('val-hour').textContent = String(_dtH).padStart(2,'0');
 
-  // Min
-  const minEl = document.getElementById('dt-min');
-  minEl.innerHTML = '';
+  // Min options
+  const ddMin = document.getElementById('dd-min');
+  ddMin.innerHTML = '';
   for (let i = 0; i < 60; i += 5) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = String(i).padStart(2, '0');
-    if (i === m) opt.selected = true;
-    minEl.appendChild(opt);
+    const label = String(i).padStart(2, '0');
+    const el = document.createElement('div');
+    el.className = 'dt-opt' + (i === _dtM ? ' sel' : '');
+    el.textContent = label;
+    el.onclick = () => { _dtM = i; closeDt(); document.getElementById('val-min').textContent = label; validate(); };
+    ddMin.appendChild(el);
   }
+  document.getElementById('val-min').textContent = String(_dtM).padStart(2,'0');
 }
 
+function toggleDt(which) {
+  const wraps = ['day','hour','min'];
+  wraps.forEach(w => {
+    const wrap = document.getElementById('wrap-'+w);
+    if (w === which) {
+      const isOpen = wrap.classList.contains('open');
+      wrap.classList.toggle('open', !isOpen);
+      // Scroll selected item into view
+      if (!isOpen) {
+        const inner = document.getElementById('dd-'+w);
+        const sel = inner.querySelector('.sel');
+        if (sel) sel.scrollIntoView({ block: 'center' });
+      }
+    } else {
+      wrap.classList.remove('open');
+    }
+  });
+}
+
+function closeDt() {
+  ['day','hour','min'].forEach(w => document.getElementById('wrap-'+w).classList.remove('open'));
+}
+
+// Close dropdowns on outside click
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.dt-select-wrap')) closeDt();
+});
+
 function getPickerDate() {
-  const dayOffset = parseInt(document.getElementById('dt-day').value)  || 0;
-  const h         = parseInt(document.getElementById('dt-hour').value) || 0;
-  const m         = parseInt(document.getElementById('dt-min').value)  || 0;
   const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  d.setHours(h, m, 0, 0);
+  d.setDate(d.getDate() + _dtDay);
+  d.setHours(_dtH, _dtM, 0, 0);
   return d;
 }
 
