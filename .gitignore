@@ -1,0 +1,10 @@
+# Nikdy necommituj reálné secrets!
+.env
+
+# Node
+node_modules/
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
