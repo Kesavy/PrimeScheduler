@@ -439,12 +439,12 @@ async function scheduleComment() {
       const now = new Date();
       // Vyhodit prošlé joby
       const fresh = raw.filter(j => new Date(j.sendAt) > now);
-      fresh.push({ jobId: data.jobId, cardId, sendAt });
+      fresh.push({ jobId: data.jobId, cardId, sendAt, text: text.slice(0, 20) });
       await t.set('member', 'private', 'pt-jobs', fresh);
     } catch(e) {
       // Storage plná — reset a ulož jen nový job
       console.warn('pt-jobs storage full, resetting:', e);
-      await t.set('member', 'private', 'pt-jobs', [{ jobId: data.jobId, cardId, sendAt }]);
+      await t.set('member', 'private', 'pt-jobs', [{ jobId: data.jobId, cardId, sendAt, text: text.slice(0, 20) }]);
     }
 
     document.getElementById('comment-text').value = '';
@@ -481,12 +481,13 @@ async function loadJobs() {
       <div class="job-item">
         <div class="job-dot"></div>
         <div class="job-body">
-          <div class="job-text">${(j.text||'Scheduled comment').replace(/</g,'&lt;')}</div>
+          <div class="job-text">${(j.text ? (j.text + (j.text.length >= 20 ? '…' : '')) : 'Scheduled comment').replace(/</g,'&lt;')}</div>
           <div class="job-time">${fmtTime(j.sendAt)}</div>
         </div>
         <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
       </div>
     `).join('');
+  t.sizeTo('#main-section').catch(() => {});
 }
 
 async function cancelJob(jobId) {
