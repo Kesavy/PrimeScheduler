@@ -431,12 +431,20 @@ async function scheduleComment() {
       throw new Error(data.error || 'Backend error');
     }
 
-    // Store job locally for badge count
-const jobs = await t.get('member', 'private', 'pt-jobs') || [];
-console.log('jobs before:', jobs);
-jobs.push({ jobId: data.jobId, cardId, cardName, text, sendAt });
-await t.set('member', 'private', 'pt-jobs', jobs);
-console.log('jobs after set:', jobs);
+    // Ukládat jen minimum — jobId + cardId + sendAt (bez textu = ~60 znaků/job)
+    // Při 4096B limitu zvládne ~60 jobů bezpečně
+    try {
+      const raw = await t.get('member', 'private', 'pt-jobs') || [];
+      const now = new Date();
+      // Vyhodit prošlé joby
+      const fresh = raw.filter(j => new Date(j.sendAt) > now);
+      fresh.push({ jobId: data.jobId, cardId, sendAt });
+      await t.set('member', 'private', 'pt-jobs', fresh);
+    } catch(e) {
+      // Storage plná — reset a ulož jen nový job
+      console.warn('pt-jobs storage full, resetting:', e);
+      await t.set('member', 'private', 'pt-jobs', [{ jobId: data.jobId, cardId, sendAt }]);
+    }
 
     document.getElementById('comment-text').value = '';
     btn.textContent = 'Schedule';
@@ -455,9 +463,12 @@ console.log('jobs after set:', jobs);
 
 // ── Pending jobs ───────────────────────────────────────────
 async function loadJobs() {
-  const all  = await t.get('member', 'private', 'pt-jobs') || [];
+  const raw  = await t.get('member', 'private', 'pt-jobs') || [];
   const now  = new Date();
-  const jobs = all.filter(j => j.cardId === cardId && new Date(j.sendAt) > now);
+  // Automaticky vyčisti prošlé joby ze storage
+  const active = raw.filter(j => new Date(j.sendAt) > now);
+  if (active.length < raw.length) await t.set('member', 'private', 'pt-jobs', active).catch(() => {});
+  const jobs = active.filter(j => j.cardId === cardId);
   const sec  = document.getElementById('jobs-section');
   const list = document.getElementById('jobs-list');
 
@@ -469,7 +480,7 @@ async function loadJobs() {
       <div class="job-item">
         <div class="job-dot"></div>
         <div class="job-body">
-          <div class="job-text">${j.text.replace(/</g,'&lt;')}</div>
+          <div class="job-text">${(j.text||'Scheduled comment').replace(/</g,'&lt;')}</div>
           <div class="job-time">${fmtTime(j.sendAt)}</div>
         </div>
         <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
