@@ -7,8 +7,8 @@
 </head>
 <body>
 <script>
-const BACKEND   = 'https://prime-scheduler.vercel.app';
-const APP_KEY   = 'e2c0af81ac6b20f973dcb22d8c88f07e'; // Intentionally public — Power-Up App Key, never put OAuth secret here
+const BACKEND   = 'https://your-vercel-backend.vercel.app';
+const APP_KEY   = 'YOUR_TRELLO_APP_KEY'; // Intentionally public — Power-Up App Key, never put OAuth secret here
 const ICON_CLOCK = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/clock.svg';
 const ICON_SCHED = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/calendar-clock.svg';
 
@@ -83,7 +83,7 @@ TrelloPowerUp.initialize({
       callback: (t) => t.popup({
         title:  'PrimeScheduler',
         url:    './schedule-popup.html',
-        height: 520,
+        height: 600,
       }),
     }];
   },
@@ -101,7 +101,7 @@ TrelloPowerUp.initialize({
                   ? `Schedule comment (${pending.length})`
                   : 'Schedule comment',
       callback: authorized
-        ? (t) => t.popup({ title: 'PrimeScheduler', url: './schedule-popup.html', height: 520 })
+        ? (t) => t.popup({ title: 'PrimeScheduler', url: './schedule-popup.html', height: 600 })
         : (t) => t.popup({ title: 'Connect PrimeScheduler', url: './authorize.html', height: 200 }),
     }];
   },
