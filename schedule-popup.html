@@ -67,17 +67,16 @@
   .mention-username{color:var(--m);font-size:10px;margin-left:2px;}
   .mention-hint{font-size:10px;color:var(--m);padding:6px 10px;font-style:italic;}
 
-  /* Datetime picker */
+  /* Datetime */
   .dt-hint{font-size:10px;color:var(--m);margin-bottom:8px;}
-  .dt-picker{display:flex;gap:6px;margin-bottom:4px;}
-  .dt-col{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:7px;overflow:hidden;position:relative;}
-  .dt-col-label{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:5px 8px 3px;border-bottom:1px solid var(--b);}
-  .dt-scroll{height:100px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;}
-  .dt-scroll::-webkit-scrollbar{display:none;}
-  .dt-item{height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--m);cursor:pointer;scroll-snap-align:center;transition:color .1s;}
-  .dt-item:hover{color:var(--txt);}
-  .dt-item.sel{color:var(--ac2);background:rgba(108,92,231,.12);}
-  .dt-sel-line{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%) translateY(16px);height:28px;pointer-events:none;border-top:1px solid rgba(108,92,231,.3);border-bottom:1px solid rgba(108,92,231,.3);}
+  .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
+  .dt-field{display:flex;flex-direction:column;gap:3px;}
+  .dt-label{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
+  .dt-input{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--txt);outline:none;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;}
+  .dt-input:focus{border-color:var(--ac);}
+  .dt-select{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--txt);outline:none;width:100%;cursor:pointer;}
+  .dt-select:focus{border-color:var(--ac);}
+  .dt-select option{background:var(--s2);color:var(--txt);}
 
   /* Send button */
   .btn-send{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;margin-bottom:6px;}
@@ -136,21 +135,14 @@
 
   <div class="sec">
     <div class="sl">Send at</div>
-    <div class="dt-picker">
-      <div class="dt-col">
-        <div class="dt-col-label">Day</div>
-        <div class="dt-sel-line"></div>
-        <div class="dt-scroll" id="dt-days"></div>
+    <div class="dt-row">
+      <div class="dt-field">
+        <span class="dt-label">Day</span>
+        <select class="dt-select" id="dt-day" onchange="validate()"></select>
       </div>
-      <div class="dt-col" style="max-width:52px">
-        <div class="dt-col-label">Hour</div>
-        <div class="dt-sel-line"></div>
-        <div class="dt-scroll" id="dt-hours"></div>
-      </div>
-      <div class="dt-col" style="max-width:52px">
-        <div class="dt-col-label">Min</div>
-        <div class="dt-sel-line"></div>
-        <div class="dt-scroll" id="dt-mins"></div>
+      <div class="dt-field">
+        <span class="dt-label">Time</span>
+        <select class="dt-select" id="dt-time" onchange="validate()"></select>
       </div>
     </div>
     <div class="dt-hint">Max 7 days ahead · your local timezone</div>
@@ -243,7 +235,7 @@ function showMain() {
     nm.textContent    = member.fullName;
   }
 
-  // Default datetime: tomorrow same time
+  // Default datetime: tomorrow, next round hour
   initDatePicker();
 
   loadJobs();
@@ -409,7 +401,9 @@ async function scheduleComment() {
     await t.set('member', 'private', 'pt-jobs', jobs);
 
     document.getElementById('comment-text').value = '';
-    fb.textContent = `Scheduled for ${fmtTime(sendAt)}`;
+    btn.textContent = 'Schedule';
+    btn.disabled = false;
+    fb.textContent = `✓ Scheduled for ${fmtTime(sendAt)}`;
     fb.className   = 'feedback ok';
     validate();
     loadJobs();
@@ -482,72 +476,57 @@ function doAuth() {
 }
 
 // ── Custom datetime picker ────────────────────────────────
-let _pickerDay = 1;
-let _pickerH   = 9;
-let _pickerM   = 0;
-
 function initDatePicker() {
   const now = new Date();
-  _pickerH = now.getHours();
-  _pickerM = Math.ceil(now.getMinutes() / 5) * 5;
-  if (_pickerM >= 60) { _pickerM = 0; _pickerH = (_pickerH + 1) % 24; }
-  _pickerDay = 1;
-  renderDays(); renderHours(); renderMins();
-}
+  // Round up to next 5-min slot
+  let h = now.getHours();
+  let m = Math.ceil((now.getMinutes() + 1) / 5) * 5;
+  if (m >= 60) { m = 0; h = (h + 1) % 24; }
 
-function renderDays() {
-  const el = document.getElementById('dt-days');
-  const now = new Date();
-  let html = '<div class="dt-item" style="height:36px"></div>';
-  for (let i = 1; i <= 7; i++) {
-    const d = new Date(now.getTime() + i * 86400000);
-    const label = i === 1 ? 'Tomorrow' :
+  // Populate day select: today (only if future time available) + next 7 days
+  const dayEl = document.getElementById('dt-day');
+  dayEl.innerHTML = '';
+  for (let i = 0; i <= 7; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + i);
+    d.setHours(0, 0, 0, 0);
+    if (i === 0 && h === 0 && m === 0) continue; // skip today if past midnight
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' :
       d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
-    html += `<div class="dt-item${i === _pickerDay ? ' sel' : ''}" onclick="selDay(${i})">${label}</div>`;
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = label;
+    if (i === (h === 0 && m === 0 ? 1 : 0)) opt.selected = true;
+    dayEl.appendChild(opt);
   }
-  html += '<div class="dt-item" style="height:36px"></div>';
-  el.innerHTML = html;
-  scrollToSel(el, _pickerDay - 1);
-}
-
-function renderHours() {
-  const el = document.getElementById('dt-hours');
-  let html = '<div class="dt-item" style="height:36px"></div>';
-  for (let i = 0; i < 24; i++) {
-    html += `<div class="dt-item${i === _pickerH ? ' sel' : ''}" onclick="selH(${i})">${String(i).padStart(2,'0')}</div>`;
+  // Default to tomorrow if today would require 00:00
+  if (dayEl.options[0]?.value === '0') {
+    dayEl.value = '0';
+  } else {
+    dayEl.value = '1';
   }
-  html += '<div class="dt-item" style="height:36px"></div>';
-  el.innerHTML = html;
-  scrollToSel(el, _pickerH);
-}
 
-function renderMins() {
-  const el = document.getElementById('dt-mins');
-  const steps = [0,5,10,15,20,25,30,35,40,45,50,55];
-  let html = '<div class="dt-item" style="height:36px"></div>';
-  steps.forEach((m) => {
-    html += `<div class="dt-item${m === _pickerM ? ' sel' : ''}" onclick="selM(${m})">${String(m).padStart(2,'0')}</div>`;
-  });
-  html += '<div class="dt-item" style="height:36px"></div>';
-  el.innerHTML = html;
-  scrollToSel(el, steps.indexOf(_pickerM));
+  // Populate time select: every 5 min, full 24h
+  const timeEl = document.getElementById('dt-time');
+  timeEl.innerHTML = '';
+  for (let th = 0; th < 24; th++) {
+    for (let tm = 0; tm < 60; tm += 5) {
+      const opt = document.createElement('option');
+      opt.value = `${th}:${tm}`;
+      const label = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
+      opt.textContent = label;
+      if (th === h && tm === m) opt.selected = true;
+      timeEl.appendChild(opt);
+    }
+  }
 }
-
-function scrollToSel(el, idx) {
-  requestAnimationFrame(() => {
-    const item = el.children[idx + 1];
-    if (item) el.scrollTop = item.offsetTop - el.offsetHeight / 2 + item.offsetHeight / 2;
-  });
-}
-
-function selDay(i) { _pickerDay = i; renderDays(); validate(); }
-function selH(h)   { _pickerH = h;   renderHours(); validate(); }
-function selM(m)   { _pickerM = m;   renderMins(); validate(); }
 
 function getPickerDate() {
-  const now = new Date();
-  const d = new Date(now.getTime() + _pickerDay * 86400000);
-  d.setHours(_pickerH, _pickerM, 0, 0);
+  const dayOffset = parseInt(document.getElementById('dt-day').value) || 0;
+  const [h, m]    = (document.getElementById('dt-time').value || '9:0').split(':').map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(h, m, 0, 0);
   return d;
 }
 
