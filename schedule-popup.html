@@ -432,9 +432,11 @@ async function scheduleComment() {
     }
 
     // Store job locally for badge count
-    const jobs = await t.get('member', 'private', 'pt-jobs') || [];
-    jobs.push({ jobId: data.jobId, cardId, cardName, text, sendAt });
-    await t.set('member', 'private', 'pt-jobs', jobs);
+const jobs = await t.get('member', 'private', 'pt-jobs') || [];
+console.log('jobs before:', jobs);
+jobs.push({ jobId: data.jobId, cardId, cardName, text, sendAt });
+await t.set('member', 'private', 'pt-jobs', jobs);
+console.log('jobs after set:', jobs);
 
     document.getElementById('comment-text').value = '';
     btn.textContent = 'Schedule';
