@@ -67,12 +67,17 @@
   .mention-username{color:var(--m);font-size:10px;margin-left:2px;}
   .mention-hint{font-size:10px;color:var(--m);padding:6px 10px;font-style:italic;}
 
-  /* Datetime */
-  .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
-  .dt-input{font-family:var(--f);font-size:11px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:7px 7px;color:var(--txt);outline:none;width:100%;}
-  .dt-input:focus{border-color:var(--ac);}
-  .dt-input::-webkit-calendar-picker-indicator{filter:invert(0.6);cursor:pointer;}
+  /* Datetime picker */
   .dt-hint{font-size:10px;color:var(--m);margin-bottom:8px;}
+  .dt-picker{display:flex;gap:6px;margin-bottom:4px;}
+  .dt-col{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:7px;overflow:hidden;position:relative;}
+  .dt-col-label{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:5px 8px 3px;border-bottom:1px solid var(--b);}
+  .dt-scroll{height:100px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;}
+  .dt-scroll::-webkit-scrollbar{display:none;}
+  .dt-item{height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--m);cursor:pointer;scroll-snap-align:center;transition:color .1s;}
+  .dt-item:hover{color:var(--txt);}
+  .dt-item.sel{color:var(--ac2);background:rgba(108,92,231,.12);}
+  .dt-sel-line{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%) translateY(16px);height:28px;pointer-events:none;border-top:1px solid rgba(108,92,231,.3);border-bottom:1px solid rgba(108,92,231,.3);}
 
   /* Send button */
   .btn-send{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;margin-bottom:6px;}
@@ -131,9 +136,22 @@
 
   <div class="sec">
     <div class="sl">Send at</div>
-    <div class="dt-row">
-      <input type="date" class="dt-input" id="send-date" onchange="validate()">
-      <input type="time" class="dt-input" id="send-time" onchange="validate()">
+    <div class="dt-picker">
+      <div class="dt-col">
+        <div class="dt-col-label">Day</div>
+        <div class="dt-sel-line"></div>
+        <div class="dt-scroll" id="dt-days"></div>
+      </div>
+      <div class="dt-col" style="max-width:52px">
+        <div class="dt-col-label">Hour</div>
+        <div class="dt-sel-line"></div>
+        <div class="dt-scroll" id="dt-hours"></div>
+      </div>
+      <div class="dt-col" style="max-width:52px">
+        <div class="dt-col-label">Min</div>
+        <div class="dt-sel-line"></div>
+        <div class="dt-scroll" id="dt-mins"></div>
+      </div>
     </div>
     <div class="dt-hint">Max 7 days ahead · your local timezone</div>
     <button class="btn-send" id="btn-send" onclick="scheduleComment()" disabled>Schedule</button>
@@ -153,7 +171,7 @@
 
 <script>
 const BACKEND = 'https://prime-scheduler.vercel.app';
-const APP_KEY = 'e2c0af81ac6b20f973dcb22d8c88f07e';
+const APP_KEY = 'YOUR_TRELLO_APP_KEY';
 
 const COLORS = ['#6C5CE7','#00B894','#E17055','#0984E3','#FDCB6E','#A29BFE','#D63031','#00CEC9'];
 function memberColor(id) {
@@ -226,11 +244,7 @@ function showMain() {
   }
 
   // Default datetime: tomorrow same time
-  const tomorrow = new Date(Date.now() + 24 * 3600 * 1000);
-  document.getElementById('send-date').value = tomorrow.toISOString().slice(0, 10);
-  const hh = String(tomorrow.getHours()).padStart(2, '0');
-  const mm = String(tomorrow.getMinutes()).padStart(2, '0');
-  document.getElementById('send-time').value = `${hh}:${mm}`;
+  initDatePicker();
 
   loadJobs();
 }
@@ -345,18 +359,15 @@ document.addEventListener('mousedown', (e) => {
 // ── Validation ─────────────────────────────────────────────
 function validate() {
   const text = document.getElementById('comment-text').value.trim();
-  const date = document.getElementById('send-date').value;
-  const time = document.getElementById('send-time').value;
-  const ok   = text.length > 0 && date && time && new Date(`${date}T${time}`) > new Date();
+  const dt   = getPickerDate();
+  const ok   = text.length > 0 && dt && dt > new Date();
   document.getElementById('btn-send').disabled = !ok;
 }
 
 // ── Schedule ───────────────────────────────────────────────
 async function scheduleComment() {
   const text   = document.getElementById('comment-text').value.trim();
-  const date   = document.getElementById('send-date').value;
-  const time   = document.getElementById('send-time').value;
-  const sendAt = new Date(`${date}T${time}`).toISOString();
+  const sendAt = getPickerDate().toISOString();
   const btn    = document.getElementById('btn-send');
   const fb     = document.getElementById('feedback');
 
@@ -468,6 +479,76 @@ async function revokeAccess() {
 // ── Auth redirect ──────────────────────────────────────────
 function doAuth() {
   t.popup({ title: 'Connect PrimeScheduler', url: './authorize.html', height: 200 });
+}
+
+// ── Custom datetime picker ────────────────────────────────
+let _pickerDay = 1;
+let _pickerH   = 9;
+let _pickerM   = 0;
+
+function initDatePicker() {
+  const now = new Date();
+  _pickerH = now.getHours();
+  _pickerM = Math.ceil(now.getMinutes() / 5) * 5;
+  if (_pickerM >= 60) { _pickerM = 0; _pickerH = (_pickerH + 1) % 24; }
+  _pickerDay = 1;
+  renderDays(); renderHours(); renderMins();
+}
+
+function renderDays() {
+  const el = document.getElementById('dt-days');
+  const now = new Date();
+  let html = '<div class="dt-item" style="height:36px"></div>';
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(now.getTime() + i * 86400000);
+    const label = i === 1 ? 'Tomorrow' :
+      d.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' });
+    html += `<div class="dt-item${i === _pickerDay ? ' sel' : ''}" onclick="selDay(${i})">${label}</div>`;
+  }
+  html += '<div class="dt-item" style="height:36px"></div>';
+  el.innerHTML = html;
+  scrollToSel(el, _pickerDay - 1);
+}
+
+function renderHours() {
+  const el = document.getElementById('dt-hours');
+  let html = '<div class="dt-item" style="height:36px"></div>';
+  for (let i = 0; i < 24; i++) {
+    html += `<div class="dt-item${i === _pickerH ? ' sel' : ''}" onclick="selH(${i})">${String(i).padStart(2,'0')}</div>`;
+  }
+  html += '<div class="dt-item" style="height:36px"></div>';
+  el.innerHTML = html;
+  scrollToSel(el, _pickerH);
+}
+
+function renderMins() {
+  const el = document.getElementById('dt-mins');
+  const steps = [0,5,10,15,20,25,30,35,40,45,50,55];
+  let html = '<div class="dt-item" style="height:36px"></div>';
+  steps.forEach((m) => {
+    html += `<div class="dt-item${m === _pickerM ? ' sel' : ''}" onclick="selM(${m})">${String(m).padStart(2,'0')}</div>`;
+  });
+  html += '<div class="dt-item" style="height:36px"></div>';
+  el.innerHTML = html;
+  scrollToSel(el, steps.indexOf(_pickerM));
+}
+
+function scrollToSel(el, idx) {
+  requestAnimationFrame(() => {
+    const item = el.children[idx + 1];
+    if (item) el.scrollTop = item.offsetTop - el.offsetHeight / 2 + item.offsetHeight / 2;
+  });
+}
+
+function selDay(i) { _pickerDay = i; renderDays(); validate(); }
+function selH(h)   { _pickerH = h;   renderHours(); validate(); }
+function selM(m)   { _pickerM = m;   renderMins(); validate(); }
+
+function getPickerDate() {
+  const now = new Date();
+  const d = new Date(now.getTime() + _pickerDay * 86400000);
+  d.setHours(_pickerH, _pickerM, 0, 0);
+  return d;
 }
 
 init();
