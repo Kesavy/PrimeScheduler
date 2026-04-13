@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PrimeScheduler – Connect</title>
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#0D0D0F;--txt:#F0EFE8;--m:#7A7A88;--ac:#6C5CE7;--f:'Inter',sans-serif;}
+  html{background:var(--bg);}
+  body{font-family:var(--f);background:var(--bg);color:var(--txt);width:268px;padding:14px;}
+  .title{font-size:13px;font-weight:600;margin-bottom:6px;}
+  .desc{font-size:11px;color:var(--m);line-height:1.5;margin-bottom:14px;}
+  .btn{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .err{margin-top:8px;padding:7px 9px;border-radius:6px;font-size:11px;background:rgba(214,48,49,.14);color:#FF7675;display:none;}
+  .err.show{display:block;}
+</style>
+</head>
+<body>
+<div class="title">Connect PrimeScheduler</div>
+<div class="desc">One-time permission to post scheduled comments on your behalf. You can revoke access at any time.</div>
+<button class="btn" id="btn" onclick="authorize()">Connect Trello account</button>
+<div class="err" id="err"></div>
+
+<script>
+const BACKEND    = 'https://your-vercel-backend.vercel.app';
+const APP_KEY    = 'YOUR_TRELLO_APP_KEY'; // Intentionally public Power-Up App Key
+const RETURN_URL = 'https://your-github-pages-url/PrimeScheduler/authorize.html';
+
+const t = TrelloPowerUp.iframe({ appKey: APP_KEY, appName: 'PrimeScheduler' });
+
+function authorize() {
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  err.classList.remove('show');
+
+  const authUrl = 'https://trello.com/1/authorize'
+    + '?expiration=never'
+    + '&scope=read,write'
+    + '&response_type=token'
+    + '&key=' + APP_KEY
+    + '&callback_method=postMessage'
+    + '&return_url=' + encodeURIComponent(RETURN_URL);
+
+  const popup = window.open(authUrl, 'trello-auth', 'width=500,height=600');
+
+  window.addEventListener('message', async function handler(e) {
+    if (e.origin !== 'https://trello.com') return;
+    window.removeEventListener('message', handler);
+    if (popup) popup.close();
+
+    const token = e.data;
+    if (!token || typeof token !== 'string') {
+      btn.disabled = false;
+      btn.textContent = 'Connect Trello account';
+      err.textContent = 'Authorization cancelled';
+      err.classList.add('show');
+      return;
+    }
+
+    try {
+      const member = await t.member('id', 'fullName');
+      const res = await fetch(`${BACKEND}/api/auth`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ memberId: member.id, token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Backend error');
+
+      // Store token locally for subsequent API calls
+      await t.set('member', 'private', 'pt-token', token);
+      await t.set('member', 'private', 'pt-authorized', true);
+      t.closePopup();
+    } catch (e2) {
+      btn.disabled = false;
+      btn.textContent = 'Connect Trello account';
+      err.textContent = e2.message;
+      err.classList.add('show');
+    }
+  });
+}
+</script>
+</body>
+</html>

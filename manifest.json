@@ -1,0 +1,15 @@
+{
+  "name": "PrimeScheduler",
+  "details": "Schedule Trello card comments for a specific time.",
+  "capabilities": [
+    "authorization-status",
+    "show-authorization",
+    "card-detail-badges",
+    "card-buttons"
+  ],
+  "connectors": {
+    "iframe": {
+      "url": "https://your-github-pages-url/PrimeScheduler/connector.html"
+    }
+  }
+}

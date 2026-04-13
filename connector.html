@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PrimeScheduler</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+</head>
+<body>
+<script>
+const BACKEND   = 'https://your-vercel-backend.vercel.app';
+const APP_KEY   = 'YOUR_TRELLO_APP_KEY'; // Intentionally public — Power-Up App Key, never put OAuth secret here
+const ICON_CLOCK = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/clock.svg';
+const ICON_SCHED = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/calendar-clock.svg';
+
+// 60-second in-memory cache for authorization status
+let _authCache = null;
+let _authCacheTs = 0;
+
+async function isAuthorized(t) {
+  if (_authCache !== null && Date.now() - _authCacheTs < 60000) return _authCache;
+  const v = await t.get('member', 'private', 'pt-authorized');
+  _authCache = v === true;
+  _authCacheTs = Date.now();
+  return _authCache;
+}
+
+async function getToken(t) {
+  return t.get('member', 'private', 'pt-token');
+}
+
+function fmtLocalTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+       + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+TrelloPowerUp.initialize({
+
+  // ── Authorization status ──────────────────────────────────
+  'authorization-status': async (t) => {
+    const authorized = await t.get('member', 'private', 'pt-authorized');
+    return { authorized: authorized === true };
+  },
+
+  'show-authorization': (t) => t.popup({
+    title: 'Connect PrimeScheduler',
+    url:   './authorize.html',
+    height: 200,
+  }),
+
+  // ── Card detail badge — visible on the open card, clickable ──
+  'card-detail-badges': async (t) => {
+    const authorized = await isAuthorized(t);
+    if (!authorized) {
+      // Show a "Connect" nudge badge
+      return [{
+        title: 'PrimeScheduler',
+        text:  'Connect to schedule',
+        color: null,
+        icon:  ICON_SCHED,
+        callback: (t) => t.popup({
+          title:  'Connect PrimeScheduler',
+          url:    './authorize.html',
+          height: 200,
+        }),
+      }];
+    }
+
+    // Count pending scheduled comments for this card
+    const card = await t.card('id');
+    const jobs = await t.get('member', 'private', 'pt-jobs') || [];
+    const now  = new Date();
+    const pending = jobs.filter(j => j.cardId === card.id && new Date(j.sendAt) > now);
+
+    return [{
+      title:    'Schedule comment',
+      text:     pending.length > 0
+                  ? `${pending.length} scheduled`
+                  : 'Schedule',
+      color:    pending.length > 0 ? 'purple' : null,
+      icon:     ICON_SCHED,
+      callback: (t) => t.popup({
+        title:  'PrimeScheduler',
+        url:    './schedule-popup.html',
+        height: 520,
+      }),
+    }];
+  },
+
+  // ── Card button — secondary entry point (also on card back) ──
+  'card-buttons': async (t) => {
+    const authorized = await isAuthorized(t);
+    const card = await t.card('id');
+    const jobs = await t.get('member', 'private', 'pt-jobs') || [];
+    const now  = new Date();
+    const pending = jobs.filter(j => j.cardId === card.id && new Date(j.sendAt) > now);
+    return [{
+      icon:     ICON_SCHED,
+      text:     pending.length > 0
+                  ? `Schedule comment (${pending.length})`
+                  : 'Schedule comment',
+      callback: authorized
+        ? (t) => t.popup({ title: 'PrimeScheduler', url: './schedule-popup.html', height: 520 })
+        : (t) => t.popup({ title: 'Connect PrimeScheduler', url: './authorize.html', height: 200 }),
+    }];
+  },
+
+}, {
+  appKey:  APP_KEY,
+  appName: 'PrimeScheduler',
+});
+</script>
+</body>
+</html>

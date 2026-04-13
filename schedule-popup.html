@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PrimeScheduler</title>
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#0D0D0F;--s:#16161A;--s2:#1E1E24;--s3:#26262E;
+    --b:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);
+    --txt:#F0EFE8;--m:#7A7A88;--ac:#6C5CE7;--ac2:#A29BFE;
+    --gr:#00B894;--rb:rgba(214,48,49,0.14);--rt:#FF7675;
+    --f:'Inter',sans-serif;
+  }
+  html{background:var(--bg);}
+  body{font-family:var(--f);background:var(--bg);color:var(--txt);width:268px;padding:0;}
+
+  /* Auth prompt */
+  .auth-wrap{padding:14px;}
+  .auth-title{font-size:13px;font-weight:600;margin-bottom:6px;}
+  .auth-desc{font-size:11px;color:var(--m);line-height:1.5;margin-bottom:12px;}
+  .btn-auth{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;}
+  .btn-auth:hover{background:#7C6AF0;}
+
+  /* Card chip */
+  .ca{padding:10px 10px 0;}
+  .cc{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:5px 9px;margin-bottom:8px;}
+  .cd{width:6px;height:6px;border-radius:50%;background:var(--ac);flex-shrink:0;}
+  .cn{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* Member chip */
+  .member-chip{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding:6px 9px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;}
+  .mc-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:white;flex-shrink:0;}
+  .mc-name{font-size:12px;font-weight:500;}
+
+  /* Section labels */
+  .sl{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;}
+  .sec{padding:0 10px 9px;}
+
+  /* Textarea with @mention support */
+  .ta-wrap{position:relative;}
+  .ta{width:100%;font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--txt);outline:none;resize:vertical;min-height:72px;max-height:140px;line-height:1.5;}
+  .ta:focus{border-color:var(--ac);}
+  .ta::placeholder{color:var(--m);}
+
+  /* @mention dropdown */
+  #mention-dropdown{
+    display:none;position:absolute;left:0;right:0;
+    background:var(--s);border:1px solid var(--b2);border-radius:7px;
+    z-index:50;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5);
+    max-height:160px;overflow-y:auto;
+  }
+  #mention-dropdown.open{display:block;}
+  #mention-dropdown::-webkit-scrollbar{width:3px;}
+  #mention-dropdown::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px;}
+  .mention-item{
+    display:flex;align-items:center;gap:8px;
+    padding:7px 10px;cursor:pointer;font-size:12px;
+    border-bottom:1px solid var(--b);
+  }
+  .mention-item:last-child{border-bottom:none;}
+  .mention-item:hover,.mention-item.active{background:var(--s2);}
+  .mention-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:white;flex-shrink:0;}
+  .mention-name{font-weight:500;color:var(--txt);}
+  .mention-username{color:var(--m);font-size:10px;margin-left:2px;}
+  .mention-hint{font-size:10px;color:var(--m);padding:6px 10px;font-style:italic;}
+
+  /* Datetime */
+  .dt-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;}
+  .dt-input{font-family:var(--f);font-size:11px;background:var(--s2);border:1px solid var(--b2);border-radius:7px;padding:7px 7px;color:var(--txt);outline:none;width:100%;}
+  .dt-input:focus{border-color:var(--ac);}
+  .dt-input::-webkit-calendar-picker-indicator{filter:invert(0.6);cursor:pointer;}
+  .dt-hint{font-size:10px;color:var(--m);margin-bottom:8px;}
+
+  /* Send button */
+  .btn-send{width:100%;padding:10px;background:var(--ac);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;margin-bottom:6px;}
+  .btn-send:hover:not(:disabled){background:#7C6AF0;}
+  .btn-send:disabled{opacity:.5;cursor:not-allowed;}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Feedback */
+  .feedback{margin:0 10px 8px;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:500;line-height:1.4;display:none;}
+  .feedback.ok{display:block;background:rgba(0,184,148,.12);color:var(--gr);border:1px solid rgba(0,184,148,.25);}
+  .feedback.err{display:block;background:var(--rb);color:var(--rt);border:1px solid rgba(214,48,49,.22);}
+
+  /* Pending jobs list */
+  #jobs-section{padding:0 10px 10px;}
+  .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;padding-top:4px;border-top:1px solid var(--b);}
+  .job-item{display:flex;align-items:flex-start;gap:7px;padding:6px 0;border-bottom:1px solid var(--b);font-size:11px;}
+  .job-item:last-child{border-bottom:none;}
+  .job-time{color:var(--ac2);font-weight:500;flex-shrink:0;min-width:68px;}
+  .job-text{color:var(--txt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .job-cancel{background:none;border:none;color:var(--m);cursor:pointer;font-size:13px;padding:1px 3px;border-radius:3px;flex-shrink:0;}
+  .job-cancel:hover{background:var(--rb);color:var(--rt);}
+
+  /* Revoke */
+  .revoke-row{padding:6px 10px 10px;text-align:center;}
+  .btn-revoke{background:none;border:none;color:var(--m);font-size:10px;font-family:var(--f);cursor:pointer;text-decoration:underline;}
+  .btn-revoke:hover{color:var(--rt);}
+</style>
+</head>
+<body>
+
+<!-- Auth prompt (shown if not authorized) -->
+<div id="auth-section" class="auth-wrap" style="display:none">
+  <div class="auth-title">Connect your Trello account</div>
+  <div class="auth-desc">PrimeScheduler needs one-time permission to post comments on your behalf at the scheduled time.</div>
+  <button class="btn-auth" onclick="doAuth()">Connect account</button>
+</div>
+
+<!-- Main UI -->
+<div id="main-section" style="display:none">
+  <div class="ca">
+    <div class="cc"><div class="cd"></div><div class="cn" id="card-name">Loading…</div></div>
+    <div class="member-chip" id="member-chip" style="display:none">
+      <div class="mc-av" id="mc-av"></div>
+      <div class="mc-name" id="mc-name"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Comment text</div>
+    <div class="ta-wrap">
+      <textarea class="ta" id="comment-text" placeholder="Write your comment… type @ to mention someone" oninput="onTextInput(event)" onkeydown="onTextKeydown(event)"></textarea>
+      <div id="mention-dropdown"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Send at</div>
+    <div class="dt-row">
+      <input type="date" class="dt-input" id="send-date" onchange="validate()">
+      <input type="time" class="dt-input" id="send-time" onchange="validate()">
+    </div>
+    <div class="dt-hint">Max 7 days ahead · your local timezone</div>
+    <button class="btn-send" id="btn-send" onclick="scheduleComment()" disabled>Schedule</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <div id="jobs-section" style="display:none">
+    <div class="jobs-title">Scheduled for this card</div>
+    <div id="jobs-list"></div>
+  </div>
+
+  <div class="revoke-row">
+    <button class="btn-revoke" onclick="revokeAccess()">Disconnect account</button>
+  </div>
+</div>
+
+<script>
+const BACKEND = 'https://your-vercel-backend.vercel.app';
+const APP_KEY = 'YOUR_TRELLO_APP_KEY';
+
+const COLORS = ['#6C5CE7','#00B894','#E17055','#0984E3','#FDCB6E','#A29BFE','#D63031','#00CEC9'];
+function memberColor(id) {
+  let h = 0;
+  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+function initials(name) {
+  const p = (name || '?').trim().split(' ');
+  return (p[0][0] + (p[1]?.[0] || '')).toUpperCase();
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+       + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+const t = TrelloPowerUp.iframe({ appKey: APP_KEY, appName: 'PrimeScheduler' });
+
+let cardId = '', cardName = '', member = null, boardMembers = [];
+// @mention state
+let mentionStart = -1;   // index in textarea where @ was typed
+let mentionQuery = '';
+let mentionActive = false;
+let mentionIndex = 0;
+let filteredMembers = [];
+
+// ── Init ───────────────────────────────────────────────────
+async function init() {
+  try {
+    const [card, board, mbr, authorized] = await Promise.all([
+      t.card('id', 'name'),
+      t.board('id', 'members'),
+      t.member('id', 'fullName', 'username'),
+      t.get('member', 'private', 'pt-authorized'),
+    ]);
+
+    cardId   = card.id;
+    cardName = card.name;
+    member   = mbr;
+    boardMembers = board.members || [];
+
+    document.getElementById('card-name').textContent = card.name;
+
+    if (authorized !== true) {
+      document.getElementById('auth-section').style.display = 'block';
+      return;
+    }
+
+    showMain();
+  } catch (e) {
+    document.getElementById('card-name').textContent = 'Error: ' + e.message;
+  }
+}
+
+function showMain() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('main-section').style.display = 'block';
+
+  // Member chip
+  const chip = document.getElementById('member-chip');
+  const av   = document.getElementById('mc-av');
+  const nm   = document.getElementById('mc-name');
+  if (member) {
+    chip.style.display = 'flex';
+    av.textContent    = initials(member.fullName);
+    av.style.background = memberColor(member.id);
+    nm.textContent    = member.fullName;
+  }
+
+  // Default datetime: tomorrow same time
+  const tomorrow = new Date(Date.now() + 24 * 3600 * 1000);
+  document.getElementById('send-date').value = tomorrow.toISOString().slice(0, 10);
+  const hh = String(tomorrow.getHours()).padStart(2, '0');
+  const mm = String(tomorrow.getMinutes()).padStart(2, '0');
+  document.getElementById('send-time').value = `${hh}:${mm}`;
+
+  loadJobs();
+}
+
+// ── @mention logic ─────────────────────────────────────────
+function onTextInput(e) {
+  validate();
+  const ta    = e.target;
+  const val   = ta.value;
+  const cursor = ta.selectionStart;
+
+  // Find the @ that triggered the current mention session
+  // Walk backwards from cursor to find unbroken word starting with @
+  let atPos = -1;
+  for (let i = cursor - 1; i >= 0; i--) {
+    if (val[i] === '@') { atPos = i; break; }
+    if (/\s/.test(val[i])) break;
+  }
+
+  if (atPos >= 0) {
+    const query = val.slice(atPos + 1, cursor).toLowerCase();
+    mentionStart  = atPos;
+    mentionQuery  = query;
+    mentionActive = true;
+    showMentionDropdown(query);
+  } else {
+    closeMentionDropdown();
+  }
+}
+
+function onTextKeydown(e) {
+  if (!mentionActive) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    mentionIndex = Math.min(mentionIndex + 1, filteredMembers.length - 1);
+    renderMentionItems();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    mentionIndex = Math.max(mentionIndex - 1, 0);
+    renderMentionItems();
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    if (filteredMembers.length > 0) {
+      e.preventDefault();
+      insertMention(filteredMembers[mentionIndex]);
+    }
+  } else if (e.key === 'Escape') {
+    closeMentionDropdown();
+  }
+}
+
+function showMentionDropdown(query) {
+  const dd = document.getElementById('mention-dropdown');
+
+  filteredMembers = boardMembers.filter(m =>
+    m.fullName.toLowerCase().includes(query) ||
+    (m.username || '').toLowerCase().includes(query)
+  ).slice(0, 6);
+
+  if (filteredMembers.length === 0) {
+    closeMentionDropdown();
+    return;
+  }
+
+  mentionIndex = 0;
+  renderMentionItems();
+  dd.classList.add('open');
+
+  // Position dropdown below textarea
+  const ta = document.getElementById('comment-text');
+  const wrap = ta.parentElement;
+  dd.style.top = (ta.offsetTop + ta.offsetHeight + 2) + 'px';
+}
+
+function renderMentionItems() {
+  const dd = document.getElementById('mention-dropdown');
+  dd.innerHTML = filteredMembers.map((m, i) => `
+    <div class="mention-item${i === mentionIndex ? ' active' : ''}"
+         onmousedown="insertMention(filteredMembers[${i}])">
+      <div class="mention-av" style="background:${memberColor(m.id)}">${initials(m.fullName)}</div>
+      <span class="mention-name">${m.fullName}</span>
+      <span class="mention-username">@${m.username || ''}</span>
+    </div>
+  `).join('');
+}
+
+function insertMention(m) {
+  if (!m) return;
+  const ta  = document.getElementById('comment-text');
+  const val = ta.value;
+  const before = val.slice(0, mentionStart);
+  const after  = val.slice(ta.selectionStart);
+  const insert = `@${m.username || m.fullName} `;
+  ta.value = before + insert + after;
+  // Move cursor after the inserted mention
+  const newPos = before.length + insert.length;
+  ta.setSelectionRange(newPos, newPos);
+  ta.focus();
+  closeMentionDropdown();
+  validate();
+}
+
+function closeMentionDropdown() {
+  mentionActive = false;
+  document.getElementById('mention-dropdown').classList.remove('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.ta-wrap')) closeMentionDropdown();
+});
+
+// ── Validation ─────────────────────────────────────────────
+function validate() {
+  const text = document.getElementById('comment-text').value.trim();
+  const date = document.getElementById('send-date').value;
+  const time = document.getElementById('send-time').value;
+  const ok   = text.length > 0 && date && time && new Date(`${date}T${time}`) > new Date();
+  document.getElementById('btn-send').disabled = !ok;
+}
+
+// ── Schedule ───────────────────────────────────────────────
+async function scheduleComment() {
+  const text   = document.getElementById('comment-text').value.trim();
+  const date   = document.getElementById('send-date').value;
+  const time   = document.getElementById('send-time').value;
+  const sendAt = new Date(`${date}T${time}`).toISOString();
+  const btn    = document.getElementById('btn-send');
+  const fb     = document.getElementById('feedback');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>';
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+
+  try {
+    const token = await t.get('member', 'private', 'pt-token');
+    if (!token) throw new Error('Not authorized. Please reconnect your account.');
+
+    const res = await fetch(`${BACKEND}/api/schedule`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        memberId: member.id,
+        token,
+        cardId,
+        cardName,
+        text,
+        sendAt,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.needsAuth) {
+        await t.set('member', 'private', 'pt-authorized', false);
+        document.getElementById('main-section').style.display = 'none';
+        document.getElementById('auth-section').style.display = 'block';
+        return;
+      }
+      throw new Error(data.error || 'Backend error');
+    }
+
+    // Store job locally for badge count
+    const jobs = await t.get('member', 'private', 'pt-jobs') || [];
+    jobs.push({ jobId: data.jobId, cardId, cardName, text, sendAt });
+    await t.set('member', 'private', 'pt-jobs', jobs);
+
+    document.getElementById('comment-text').value = '';
+    fb.textContent = `Scheduled for ${fmtTime(sendAt)}`;
+    fb.className   = 'feedback ok';
+    validate();
+    loadJobs();
+  } catch (e) {
+    fb.textContent = e.message;
+    fb.className   = 'feedback err';
+    btn.disabled   = false;
+    btn.textContent = 'Schedule';
+  }
+}
+
+// ── Pending jobs ───────────────────────────────────────────
+async function loadJobs() {
+  const all  = await t.get('member', 'private', 'pt-jobs') || [];
+  const now  = new Date();
+  const jobs = all.filter(j => j.cardId === cardId && new Date(j.sendAt) > now);
+  const sec  = document.getElementById('jobs-section');
+  const list = document.getElementById('jobs-list');
+
+  if (!jobs.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = jobs
+    .sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt))
+    .map(j => `
+      <div class="job-item">
+        <div class="job-time">${fmtTime(j.sendAt)}</div>
+        <div class="job-text" title="${j.text.replace(/"/g,'&quot;')}">${j.text}</div>
+        <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
+      </div>
+    `).join('');
+}
+
+async function cancelJob(jobId) {
+  // Optimistic remove from local list
+  const jobs = (await t.get('member', 'private', 'pt-jobs') || []).filter(j => j.jobId !== jobId);
+  await t.set('member', 'private', 'pt-jobs', jobs);
+  loadJobs();
+  // Mark cancelled on backend (best-effort — job TTL handles eventual cleanup)
+  const token = await t.get('member', 'private', 'pt-token');
+  fetch(`${BACKEND}/api/revoke-job`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, memberId: member.id, token }),
+  }).catch(() => {});
+}
+
+// ── Revoke ─────────────────────────────────────────────────
+async function revokeAccess() {
+  if (!confirm('Disconnect your Trello account from PrimeScheduler? All pending scheduled comments will be cancelled.')) return;
+  try {
+    const token = await t.get('member', 'private', 'pt-token');
+    await fetch(`${BACKEND}/api/revoke`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ memberId: member.id, token }),
+    });
+    await t.set('member', 'private', 'pt-authorized', false);
+    await t.set('member', 'private', 'pt-token', null);
+    await t.set('member', 'private', 'pt-jobs', []);
+    document.getElementById('main-section').style.display = 'none';
+    document.getElementById('auth-section').style.display = 'block';
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── Auth redirect ──────────────────────────────────────────
+function doAuth() {
+  t.popup({ title: 'Connect PrimeScheduler', url: './authorize.html', height: 200 });
+}
+
+init();
+</script>
+</body>
+</html>
