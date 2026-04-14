@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeScheduler — Schedule Trello comments</title>
+<meta name="description" content="Schedule Trello card comments to send at the right moment. Works natively inside Trello — no extra apps needed.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.page{background:#0D0D0F;color:#F0EFE8;min-height:100vh;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;}
+.nav-icon{width:28px;height:28px;background:#6C5CE7;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.nav-cta{background:#6C5CE7;color:white;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+.hero{text-align:center;padding:72px 24px 56px;max-width:700px;margin:0 auto;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(108,92,231,0.15);border:1px solid rgba(108,92,231,0.35);border-radius:20px;padding:5px 14px;font-size:12px;color:#A29BFE;margin-bottom:24px;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:#6C5CE7;}
+.hero h1{font-size:46px;font-weight:700;line-height:1.15;letter-spacing:-1px;margin-bottom:18px;}
+.hero h1 span{color:#6C5CE7;}
+.hero p{font-size:17px;color:#9A9A9A;line-height:1.6;margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:#6C5CE7;color:white;border:none;padding:13px 28px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
+.btn-secondary{background:transparent;color:#F0EFE8;border:1px solid rgba(255,255,255,0.2);padding:13px 28px;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;}
+.trello-badge{display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:12px;color:#7A7A88;}
+.mockup{background:#16161A;border:1px solid rgba(255,255,255,0.1);border-radius:12px;max-width:320px;margin:48px auto 0;overflow:hidden;}
+.mockup-bar{background:#1E1E24;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.07);}
+.mockup-title{font-size:12px;font-weight:600;color:#F0EFE8;}
+.mockup-x{font-size:14px;color:#7A7A88;}
+.mockup-body{padding:14px;}
+.m-chip{background:#1E1E24;border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:5px 10px;font-size:11px;display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.m-dot{width:6px;height:6px;border-radius:50%;background:#6C5CE7;}
+.m-label{font-size:9px;color:#7A7A88;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin:10px 0 5px;}
+.m-ta{background:#1E1E24;border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:8px 10px;font-size:11px;color:#7A7A88;height:44px;margin-bottom:10px;}
+.m-grid{display:grid;grid-template-columns:1fr 56px 56px;gap:5px;margin-bottom:10px;}
+.m-sel{background:#1E1E24;border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:6px 8px;font-size:11px;color:#F0EFE8;}
+.m-btn{background:#6C5CE7;color:white;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:600;width:100%;cursor:pointer;margin-bottom:10px;}
+.m-sec-title{font-size:9px;color:#7A7A88;text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07);margin-bottom:6px;}
+.m-job{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.m-jdot{width:7px;height:7px;border-radius:50%;background:#6C5CE7;flex-shrink:0;}
+.m-jbody{flex:1;}
+.m-jtext{font-size:11px;font-weight:500;}
+.m-jtime{font-size:10px;color:#7A7A88;}
+.features{padding:72px 24px;max-width:960px;margin:0 auto;}
+.features h2{text-align:center;font-size:32px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px;}
+.features-sub{text-align:center;font-size:15px;color:#7A7A88;margin-bottom:48px;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+.feat-card{background:#16161A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;}
+.feat-icon{width:36px;height:36px;background:rgba(108,92,231,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:16px;}
+.feat-card h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.feat-card p{font-size:13px;color:#7A7A88;line-height:1.6;}
+.pricing{padding:72px 24px;max-width:960px;margin:0 auto;text-align:center;}
+.pricing h2{font-size:32px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px;}
+.pricing-sub{font-size:15px;color:#7A7A88;margin-bottom:48px;}
+.pricing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:600px;margin:0 auto;}
+.p-card{background:#16161A;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:28px;text-align:left;}
+.p-card.featured{border-color:#6C5CE7;position:relative;}
+.p-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6C5CE7;color:white;font-size:11px;font-weight:600;padding:4px 14px;border-radius:20px;white-space:nowrap;}
+.p-plan{font-size:13px;color:#7A7A88;margin-bottom:8px;font-weight:500;}
+.p-price{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:4px;}
+.p-price span{font-size:15px;font-weight:400;color:#7A7A88;}
+.p-save{font-size:12px;color:#00B894;margin-bottom:20px;font-weight:500;}
+.p-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0;}
+.p-features{list-style:none;margin-bottom:24px;}
+.p-features li{font-size:13px;color:#C8C7C0;padding:5px 0;display:flex;align-items:center;gap:8px;}
+.p-check{color:#6C5CE7;font-weight:700;font-size:14px;}
+.p-cta{background:#6C5CE7;color:white;border:none;width:100%;padding:11px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;}
+.p-cta.outline{background:transparent;border:1px solid rgba(255,255,255,0.15);color:#F0EFE8;}
+.faq{padding:72px 24px;max-width:640px;margin:0 auto;}
+.faq h2{font-size:32px;font-weight:700;letter-spacing:-0.5px;margin-bottom:40px;text-align:center;}
+.faq-item{border-bottom:1px solid rgba(255,255,255,0.07);padding:18px 0;}
+.faq-q{font-size:15px;font-weight:500;margin-bottom:8px;}
+.faq-a{font-size:14px;color:#7A7A88;line-height:1.6;}
+.footer{border-top:1px solid rgba(255,255,255,0.07);padding:28px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.footer-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;}
+.footer-links{display:flex;gap:20px;}
+.footer-links a{font-size:13px;color:#7A7A88;text-decoration:none;}
+.footer-copy{font-size:12px;color:#4A4A52;}
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-icon">⏰</div>
+      PrimeScheduler
+    </div>
+    <button class="nav-cta">Add to Trello</button>
+  </nav>
+
+  <div class="hero">
+    <div class="badge"><div class="badge-dot"></div> Trello Power-Up</div>
+    <h1>Schedule Trello comments<br>to send at the <span>right moment</span></h1>
+    <p>Write your comment now, pick a time, done. PrimeScheduler posts it automatically — directly inside Trello, no extra apps needed.</p>
+    <div class="hero-btns">
+      <button class="btn-primary">Get started — $4.99/month</button>
+      <button class="btn-secondary">See pricing</button>
+    </div>
+    <div class="trello-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#0079BF"><rect rx="3" width="10" height="18" x="1" y="3"/><rect rx="3" width="10" height="11" x="13" y="3"/></svg>
+      Works natively inside Trello — no new tab, no login
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-bar">
+      <div class="mockup-title">PrimeScheduler</div>
+      <div class="mockup-x">✕</div>
+    </div>
+    <div class="mockup-body">
+      <div class="m-chip"><div class="m-dot"></div> Q3 launch checklist</div>
+      <div class="m-label">Comment text</div>
+      <div class="m-ta">@martin heads up — goes live tomorrow 🚀</div>
+      <div class="m-label">Send at</div>
+      <div class="m-grid">
+        <div class="m-sel">Tomorrow ▾</div>
+        <div class="m-sel">09 ▾</div>
+        <div class="m-sel">00 ▾</div>
+      </div>
+      <button class="m-btn">Schedule</button>
+      <div class="m-sec-title">Scheduled comments</div>
+      <div class="m-job"><div class="m-jdot"></div><div class="m-jbody"><div class="m-jtext">@martin heads up — g…</div><div class="m-jtime">15. 4. 09:00</div></div></div>
+      <div class="m-job"><div class="m-jdot"></div><div class="m-jbody"><div class="m-jtext">Weekly sync reminder</div><div class="m-jtime">17. 4. 14:00</div></div></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <h2>Everything you need, nothing you don't</h2>
+    <p class="features-sub">Built specifically for Trello. No Zapier, no webhooks, no setup hell.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">⏰</div>
+        <h3>Schedule any comment</h3>
+        <p>Pick a day, hour and minute. Your comment goes out automatically — even when you're away.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">@</div>
+        <h3>@mention your teammates</h3>
+        <p>Type @ and pick a board member. They'll get a Trello notification exactly when the comment lands.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">✓</div>
+        <h3>Lives inside Trello</h3>
+        <p>Opens directly from the card. No new tab, no separate account. Just click the badge and schedule.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">✕</div>
+        <h3>Cancel anytime</h3>
+        <p>Changed your mind? Cancel any pending comment before it sends with a single click.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing">
+    <h2>Simple, honest pricing</h2>
+    <p class="pricing-sub">One workspace. Unlimited scheduled comments. Cancel anytime.</p>
+    <div class="pricing-cards">
+      <div class="p-card">
+        <div class="p-plan">Monthly</div>
+        <div class="p-price">$4.99 <span>/ month</span></div>
+        <div class="p-save">&nbsp;</div>
+        <hr class="p-divider">
+        <ul class="p-features">
+          <li><span class="p-check">✓</span> Unlimited scheduled comments</li>
+          <li><span class="p-check">✓</span> @mention autocomplete</li>
+          <li><span class="p-check">✓</span> Up to 7 days ahead</li>
+          <li><span class="p-check">✓</span> Cancel anytime</li>
+        </ul>
+        <button class="p-cta outline">Get started</button>
+      </div>
+      <div class="p-card featured">
+        <div class="p-badge">Best value</div>
+        <div class="p-plan">Annual</div>
+        <div class="p-price">$47.90 <span>/ year</span></div>
+        <div class="p-save">2 months free vs monthly</div>
+        <hr class="p-divider">
+        <ul class="p-features">
+          <li><span class="p-check">✓</span> Unlimited scheduled comments</li>
+          <li><span class="p-check">✓</span> @mention autocomplete</li>
+          <li><span class="p-check">✓</span> Up to 7 days ahead</li>
+          <li><span class="p-check">✓</span> Cancel anytime</li>
+        </ul>
+        <button class="p-cta">Get started</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq">
+    <h2>Questions</h2>
+    <div class="faq-item">
+      <div class="faq-q">Do I need a Trello paid plan?</div>
+      <div class="faq-a">No. PrimeScheduler works on all Trello plans including Free.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Who posts the comment?</div>
+      <div class="faq-a">The comment is posted under your own Trello account — exactly as if you typed it yourself, just at the time you chose.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How far ahead can I schedule?</div>
+      <div class="faq-a">Up to 7 days ahead. Extended scheduling is coming in a future update.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I cancel a scheduled comment?</div>
+      <div class="faq-a">Yes, any time before it sends. Just open the card, click the badge and hit × next to the comment.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is my Trello token stored securely?</div>
+      <div class="faq-a">Yes. Your OAuth token is encrypted with AES-256-GCM and stored on EU servers. You can revoke access at any time from within the Power-Up.</div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-logo"><div class="nav-icon" style="width:22px;height:22px;font-size:11px;">⏰</div> PrimeScheduler</div>
+    <div class="footer-links">
+      <a href="https://kesavy.github.io/PrimeScheduler/privacy-policy.html">Privacy policy</a>
+      <a href="mailto:primescheduler.app@gmail.com">Contact</a>
+    </div>
+    <div class="footer-copy">Not affiliated with Atlassian or Trello.</div>
+  </footer>
+</div>
+</body>
+</html>
