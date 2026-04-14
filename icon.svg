@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 200 200" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>PrimeScheduler icon</title>
+  <desc>Purple rounded square with a clock and checkmark</desc>
+  <rect width="200" height="200" rx="44" fill="#6C5CE7"/>
+  <circle cx="100" cy="90" r="52" fill="#5A4BD4"/>
+  <circle cx="100" cy="90" r="44" fill="#7C6CF0"/>
+  <line x1="100" y1="90" x2="100" y2="62" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="100" y1="90" x2="120" y2="102" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="100" cy="90" r="5" fill="white"/>
+  <circle cx="100" cy="46" r="3" fill="white" opacity="0.5"/>
+  <circle cx="100" cy="134" r="3" fill="white" opacity="0.5"/>
+  <circle cx="56" cy="90" r="3" fill="white" opacity="0.5"/>
+  <circle cx="144" cy="90" r="3" fill="white" opacity="0.5"/>
+  <rect x="62" y="148" width="76" height="32" rx="16" fill="#5A4BD4"/>
+  <polyline points="76,164 88,176 124,152" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
