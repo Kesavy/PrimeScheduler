@@ -487,7 +487,6 @@ async function loadJobs() {
         <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
       </div>
     `).join('');
-  t.sizeTo('#main-section').catch(() => {});
 }
 
 async function cancelJob(jobId) {
