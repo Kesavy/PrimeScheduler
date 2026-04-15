@@ -106,8 +106,8 @@
   /* Pending jobs list — scrollable area */
   #jobs-section{border-top:1px solid var(--b);}
   .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:8px 12px 6px;}
-  #jobs-list{height:160px;overflow-y:scroll;padding:0 12px 10px;}
-  #jobs-list::-webkit-scrollbar-corner{background:transparent;}
+  #jobs-list{max-height:160px;overflow-y:scroll;padding:0 12px 10px;}
+  #jobs-list:empty{display:none;}
   #jobs-list::-webkit-scrollbar{width:4px;}
   #jobs-list::-webkit-scrollbar-track{background:transparent;}
   #jobs-list::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px;}
@@ -123,6 +123,13 @@
 
   /* Revoke */
   .revoke-row{padding:6px 12px 12px;text-align:center;flex-shrink:0;}
+
+  /* Paywall */
+  .paywall{margin:0 12px 10px;padding:14px 14px;background:rgba(108,92,231,0.1);border:1px solid rgba(108,92,231,0.3);border-radius:10px;text-align:center;}
+  .paywall-title{font-size:13px;font-weight:600;margin-bottom:4px;}
+  .paywall-desc{font-size:11px;color:var(--m);margin-bottom:12px;line-height:1.5;}
+  .btn-upgrade{background:var(--ac);color:white;border:none;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;}
+  .btn-upgrade:hover{background:#7C6AF0;}
   .btn-revoke{background:none;border:none;color:var(--m);font-size:10px;font-family:var(--f);cursor:pointer;text-decoration:underline;}
   .btn-revoke:hover{color:var(--rt);}
 </style>
@@ -187,8 +194,9 @@
   </div>
 
   <div class="feedback" id="feedback"></div>
+  <div id="paywall-section" style="display:none"></div>
 
-  <div id="jobs-section">
+  <div id="jobs-section" style="display:none">
     <div class="jobs-title">Scheduled comments</div>
     <div id="jobs-list"></div>
   </div>
@@ -222,6 +230,7 @@ function fmtTime(iso) {
 const t = TrelloPowerUp.iframe({ appKey: APP_KEY, appName: 'PrimeScheduler' });
 
 let cardId = '', cardName = '', member = null, boardMembers = [];
+let memberPlan = 'free'; // 'free' nebo 'pro'
 // @mention state
 let mentionStart = -1;   // index in textarea where @ was typed
 let mentionQuery = '';
@@ -275,7 +284,8 @@ function showMain() {
   // Default datetime: tomorrow, next round hour
   initDatePicker();
 
-  loadJobs();
+  // Načíst plan ze serveru
+  loadPlan().then(() => loadJobs());
 }
 
 // ── @mention logic ─────────────────────────────────────────
@@ -473,8 +483,8 @@ async function loadJobs() {
   const sec  = document.getElementById('jobs-section');
   const list = document.getElementById('jobs-list');
 
-  list.innerHTML = '';
-  if (!jobs.length) return;
+  if (!jobs.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
   list.innerHTML = jobs
     .sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt))
     .map(j => `
@@ -487,6 +497,8 @@ async function loadJobs() {
         <button class="job-cancel" onclick="cancelJob('${j.jobId}')" title="Cancel">×</button>
       </div>
     `).join('');
+  updatePaywall(active.length);
+  t.sizeTo('#main-section').catch(() => {});
 }
 
 async function cancelJob(jobId) {
@@ -526,6 +538,45 @@ async function revokeAccess() {
 // ── Auth redirect ──────────────────────────────────────────
 function doAuth() {
   t.popup({ title: 'Connect PrimeScheduler', url: './authorize.html', height: 200 });
+}
+
+// ── Plan & paywall ────────────────────────────────────────
+async function loadPlan() {
+  if (!member) return;
+  try {
+    const res = await fetch(`${BACKEND}/api/plan?memberId=${member.id}`);
+    const data = await res.json();
+    memberPlan = data.plan || 'free';
+  } catch {
+    memberPlan = 'free';
+  }
+}
+
+function updatePaywall(activeJobCount) {
+  const pwSection = document.getElementById('paywall-section');
+  const btnSend   = document.getElementById('btn-send');
+  const secForm   = document.querySelector('.sec:last-of-type');
+
+  if (memberPlan === 'pro' || activeJobCount < 5) {
+    pwSection.style.display = 'none';
+    if (btnSend) btnSend.style.display = '';
+    return;
+  }
+
+  // Limit dosažen — zobrazit paywall
+  pwSection.style.display = 'block';
+  pwSection.innerHTML = `
+    <div class="paywall">
+      <div class="paywall-title">Free limit reached</div>
+      <div class="paywall-desc">You've used all 5 free scheduled comments.<br>Upgrade to Pro for unlimited scheduling.</div>
+      <button class="btn-upgrade" onclick="openUpgrade()">Upgrade to Pro — $4.99/month</button>
+    </div>`;
+  if (btnSend) btnSend.style.display = 'none';
+}
+
+function openUpgrade() {
+  const url = `https://kesavy.github.io/PrimeScheduler/?memberId=${member.id}`;
+  window.open(url, '_blank');
 }
 
 // ── Custom datetime picker ────────────────────────────────

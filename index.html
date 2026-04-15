@@ -231,9 +231,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
     }
   });
 
+  function getMemberId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('memberId') || null;
+  }
+
   function openCheckout(priceId) {
-    Paddle.Checkout.open({
+    const memberId = getMemberId();
+    const opts = {
       items: [{ priceId: priceId, quantity: 1 }]
-    });
+    };
+    if (memberId) opts.customData = { memberId: memberId };
+    Paddle.Checkout.open(opts);
   }
 </script>
