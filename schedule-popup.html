@@ -7,14 +7,22 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  :root{
+    :root{
     --bg:#0D0D0F;--s:#16161A;--s2:#1E1E24;--s3:#26262E;
     --b:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);
     --txt:#F0EFE8;--m:#7A7A88;--ac:#6C5CE7;--ac2:#A29BFE;
     --gr:#00B894;--rb:rgba(214,48,49,0.14);--rt:#FF7675;
     --f:'Inter',sans-serif;
   }
-  html{background:var(--bg);overflow:hidden;}
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#FFFFFF;--s:#F4F5F7;--s2:#EBECF0;--s3:#DFE1E6;
+      --b:rgba(0,0,0,0.08);--b2:rgba(0,0,0,0.16);
+      --txt:#172B4D;--m:#6B778C;--ac:#5243AA;--ac2:#5243AA;
+      --gr:#00875A;--rb:rgba(191,38,0,0.10);--rt:#BF2600;
+    }
+  }
+  html,body{background:var(--bg);overflow:hidden;}
   body{font-family:var(--f);background:var(--bg);color:var(--txt);padding:0;margin:0;overflow:hidden;}
 
   /* Auth prompt */
@@ -76,11 +84,11 @@
   /* Custom select trigger */
   .dt-select-wrap{position:relative;}
   .dt-select-val{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 28px 7px 10px;color:var(--txt);cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .dt-select-wrap.open .dt-select-val{border-color:var(--ac);border-radius:0 0 8px 8px;}
+  .dt-select-wrap.open .dt-select-val{border-color:var(--ac);border-radius:8px 8px 0 0;}
   .dt-select-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--m);font-size:10px;}
 
   /* Dropdown panel */
-  .dt-dropdown{display:none;position:absolute;bottom:100%;left:0;right:0;background:var(--s);border:1px solid var(--ac);border-bottom:none;border-radius:10px 10px 0 0;z-index:100;overflow:hidden;}
+  .dt-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--ac);border-top:none;border-radius:0 0 10px 10px;z-index:100;overflow:hidden;}
   .dt-select-wrap.open .dt-dropdown{display:block;}
   .dt-dropdown-inner{max-height:160px;overflow-y:auto;padding:4px 0;}
   .dt-dropdown-inner::-webkit-scrollbar{width:4px;}

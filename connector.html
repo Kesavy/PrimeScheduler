@@ -12,10 +12,11 @@ const APP_KEY  = 'e2c0af81ac6b20f973dcb22d8c88f07e';
 const ICON_SCHED = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/calendar-clock.svg';
 
 async function isAuthorized(t) {
-  // No caching — always read fresh from Trello storage
-  // so badge updates immediately after authorization
+  if (_authCache !== null && Date.now() - _authCacheTs < 60000) return _authCache;
   const v = await t.get('member', 'private', 'pt-authorized');
-  return v === true;
+  _authCache = v === true;
+  _authCacheTs = Date.now();
+  return _authCache;
 }
 
 TrelloPowerUp.initialize({
@@ -40,22 +41,26 @@ TrelloPowerUp.initialize({
   }),
 
   // ── GDPR: remove member data on request ───────────────────
-  'remove-data': async (t) => {
-    try {
-      const token    = await t.get('member', 'private', 'pt-token');
-      const memberId = (await t.member('id')).id;
-      if (token && memberId) {
-        await fetch(`${BACKEND}/api/revoke`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ memberId, token }),
-        }).catch(() => {});
-      }
-    } catch {}
-    await t.set('member', 'private', 'pt-authorized', false);
-    await t.set('member', 'private', 'pt-token',      null);
-    await t.set('member', 'private', 'pt-jobs',       []);
-
+  'remove-data': (t) => {
+    // Must complete synchronously-fast — Trello has 1000ms timeout
+    // Fire backend revoke completely async, don't await anything
+    t.get('member', 'private', 'pt-token').then(token => {
+      t.member('id').then(m => {
+        if (token && m && m.id) {
+          fetch(`${BACKEND}/api/revoke`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: m.id, token }),
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }).catch(() => {});
+    // Clear storage — return the Promise so Trello knows when we're done
+    return Promise.all([
+      t.set('member', 'private', 'pt-authorized', false),
+      t.set('member', 'private', 'pt-token', null),
+      t.set('member', 'private', 'pt-jobs', []),
+    ]);
   },
 
   // ── Card detail badge ─────────────────────────────────────
