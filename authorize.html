@@ -77,10 +77,8 @@ function authorize() {
       // Store token locally for subsequent API calls
       await t.set('member', 'private', 'pt-token', token);
       await t.set('member', 'private', 'pt-authorized', true);
-      // Trigger badge refresh by writing to card shared storage
-      // card-detail-badges re-evaluates when card pluginData changes
       try { await t.set('card', 'shared', 'ps-auth', Date.now()); } catch {}
-      await t.closePopup();
+      t.closePopup();
     } catch (e2) {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
