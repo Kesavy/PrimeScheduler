@@ -8,8 +8,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{--bg:#0D0D0F;--txt:#F0EFE8;--m:#7A7A88;--ac:#6C5CE7;--f:'Inter',sans-serif;}
-  @media(prefers-color-scheme:light){:root{--bg:#FFFFFF;--txt:#172B4D;--m:#6B778C;--ac:#5243AA;}}
-  html,body{background:var(--bg);}
+  html{background:var(--bg);}
   body{font-family:var(--f);background:var(--bg);color:var(--txt);width:268px;padding:14px;}
   .title{font-size:13px;font-weight:600;margin-bottom:6px;}
   .desc{font-size:11px;color:var(--m);line-height:1.5;margin-bottom:14px;}
@@ -78,7 +77,10 @@ function authorize() {
       // Store token locally for subsequent API calls
       await t.set('member', 'private', 'pt-token', token);
       await t.set('member', 'private', 'pt-authorized', true);
-      t.closePopup();
+      // Trigger badge refresh by writing to card shared storage
+      // card-detail-badges re-evaluates when card pluginData changes
+      try { await t.set('card', 'shared', 'ps-auth', Date.now()); } catch {}
+      await t.closePopup();
     } catch (e2) {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
