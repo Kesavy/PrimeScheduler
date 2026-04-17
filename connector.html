@@ -69,9 +69,11 @@ TrelloPowerUp.initialize({
         text:     'Connect to schedule',
         color:    null,
         icon:     ICON_SCHED,
-        // Použít show-authorization — Trello po zavření automaticky
-        // refreshne authorization-status a tím i card-detail-badges
-        callback: (t) => t.showAuthorization(),
+        callback: (t) => t.popup({
+          title:  'Connect PrimeScheduler',
+          url:    './authorize.html',
+          height: 200,
+        }),
       }];
     }
 
@@ -88,7 +90,7 @@ TrelloPowerUp.initialize({
       callback: (t) => t.popup({
         title:  'PrimeScheduler',
         url:    './schedule-popup.html',
-        height: 600,
+        height: 520,
       }),
     }];
   },
