@@ -1,5 +1,11 @@
 {
   "buildCommand": "",
   "outputDirectory": "",
-  "framework": null
+  "framework": null,
+  "crons": [
+    {
+      "path": "/api/compliance-poll",
+      "schedule": "0 9 * * 1"
+    }
+  ]
 }
