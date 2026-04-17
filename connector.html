@@ -11,15 +11,11 @@ const BACKEND  = 'https://prime-scheduler.vercel.app';
 const APP_KEY  = 'e2c0af81ac6b20f973dcb22d8c88f07e';
 const ICON_SCHED = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/calendar-clock.svg';
 
-let _authCache = null;
-let _authCacheTs = 0;
-
 async function isAuthorized(t) {
-  if (_authCache !== null && Date.now() - _authCacheTs < 60000) return _authCache;
+  // No caching — always read fresh from Trello storage
+  // so badge updates immediately after authorization
   const v = await t.get('member', 'private', 'pt-authorized');
-  _authCache = v === true;
-  _authCacheTs = Date.now();
-  return _authCache;
+  return v === true;
 }
 
 TrelloPowerUp.initialize({
@@ -45,26 +41,21 @@ TrelloPowerUp.initialize({
 
   // ── GDPR: remove member data on request ───────────────────
   'remove-data': async (t) => {
-    // Fire-and-forget backend revoke — don't await, must complete within timeout
     try {
       const token    = await t.get('member', 'private', 'pt-token');
       const memberId = (await t.member('id')).id;
       if (token && memberId) {
-        fetch(`${BACKEND}/api/revoke`, {
+        await fetch(`${BACKEND}/api/revoke`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ memberId, token }),
         }).catch(() => {});
       }
-      // Clear local storage in parallel
-      await Promise.all([
-        t.set('member', 'private', 'pt-authorized', false),
-        t.set('member', 'private', 'pt-token',      null),
-        t.set('member', 'private', 'pt-jobs',       []),
-      ]);
     } catch {}
-    _authCache = false;
-    _authCacheTs = Date.now();
+    await t.set('member', 'private', 'pt-authorized', false);
+    await t.set('member', 'private', 'pt-token',      null);
+    await t.set('member', 'private', 'pt-jobs',       []);
+
   },
 
   // ── Card detail badge ─────────────────────────────────────

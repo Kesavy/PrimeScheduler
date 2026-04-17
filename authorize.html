@@ -77,7 +77,8 @@ function authorize() {
       // Store token locally for subsequent API calls
       await t.set('member', 'private', 'pt-token', token);
       await t.set('member', 'private', 'pt-authorized', true);
-      t.closePopup();
+      // Notify Trello to refresh card badges
+      await t.closePopup();
     } catch (e2) {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
