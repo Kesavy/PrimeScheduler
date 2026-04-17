@@ -45,20 +45,24 @@ TrelloPowerUp.initialize({
 
   // ── GDPR: remove member data on request ───────────────────
   'remove-data': async (t) => {
+    // Fire-and-forget backend revoke — don't await, must complete within timeout
     try {
       const token    = await t.get('member', 'private', 'pt-token');
       const memberId = (await t.member('id')).id;
       if (token && memberId) {
-        await fetch(`${BACKEND}/api/revoke`, {
+        fetch(`${BACKEND}/api/revoke`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ memberId, token }),
         }).catch(() => {});
       }
+      // Clear local storage in parallel
+      await Promise.all([
+        t.set('member', 'private', 'pt-authorized', false),
+        t.set('member', 'private', 'pt-token',      null),
+        t.set('member', 'private', 'pt-jobs',       []),
+      ]);
     } catch {}
-    await t.set('member', 'private', 'pt-authorized', false);
-    await t.set('member', 'private', 'pt-token',      null);
-    await t.set('member', 'private', 'pt-jobs',       []);
     _authCache = false;
     _authCacheTs = Date.now();
   },
