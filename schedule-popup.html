@@ -76,11 +76,11 @@
   /* Custom select trigger */
   .dt-select-wrap{position:relative;}
   .dt-select-val{font-family:var(--f);font-size:12px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 28px 7px 10px;color:var(--txt);cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .dt-select-wrap.open .dt-select-val{border-color:var(--ac);border-radius:8px 8px 0 0;}
+  .dt-select-wrap.open .dt-select-val{border-color:var(--ac);border-radius:0 0 8px 8px;}
   .dt-select-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--m);font-size:10px;}
 
   /* Dropdown panel */
-  .dt-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--s);border:1px solid var(--ac);border-top:none;border-radius:0 0 10px 10px;z-index:100;overflow:hidden;}
+  .dt-dropdown{display:none;position:absolute;bottom:100%;left:0;right:0;background:var(--s);border:1px solid var(--ac);border-bottom:none;border-radius:10px 10px 0 0;z-index:100;overflow:hidden;}
   .dt-select-wrap.open .dt-dropdown{display:block;}
   .dt-dropdown-inner{max-height:160px;overflow-y:auto;padding:4px 0;}
   .dt-dropdown-inner::-webkit-scrollbar{width:4px;}
@@ -104,7 +104,7 @@
   .feedback.err{display:block;background:var(--rb);color:var(--rt);border:1px solid rgba(214,48,49,.22);}
 
   /* Pending jobs list — scrollable area */
-  #jobs-section{border-top:1px solid var(--b);min-height:36px;}
+  #jobs-section{border-top:1px solid var(--b);}
   .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:8px 12px 6px;}
   #jobs-list{max-height:160px;overflow-y:scroll;padding:0 12px 10px;}
   #jobs-list:empty{display:none;}
@@ -196,7 +196,7 @@
   <div class="feedback" id="feedback"></div>
   <div id="paywall-section" style="display:none"></div>
 
-  <div id="jobs-section">
+  <div id="jobs-section" style="display:none">
     <div class="jobs-title">Scheduled comments</div>
     <div id="jobs-list"></div>
   </div>
@@ -483,8 +483,8 @@ async function loadJobs() {
   const sec  = document.getElementById('jobs-section');
   const list = document.getElementById('jobs-list');
 
-  list.innerHTML = '';
-  if (!jobs.length) return;
+  if (!jobs.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
   list.innerHTML = jobs
     .sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt))
     .map(j => `
