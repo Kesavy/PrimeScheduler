@@ -12,11 +12,8 @@ const APP_KEY  = 'e2c0af81ac6b20f973dcb22d8c88f07e';
 const ICON_SCHED = 'https://cdn.jsdelivr.net/npm/lucide-static@0.441.0/icons/calendar-clock.svg';
 
 async function isAuthorized(t) {
-  if (_authCache !== null && Date.now() - _authCacheTs < 60000) return _authCache;
   const v = await t.get('member', 'private', 'pt-authorized');
-  _authCache = v === true;
-  _authCacheTs = Date.now();
-  return _authCache;
+  return v === true;
 }
 
 TrelloPowerUp.initialize({
