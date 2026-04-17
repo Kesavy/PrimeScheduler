@@ -77,7 +77,7 @@ function authorize() {
       // Store token locally for subsequent API calls
       await t.set('member', 'private', 'pt-token', token);
       await t.set('member', 'private', 'pt-authorized', true);
-      try { await t.set('card', 'shared', 'ps-auth', Date.now()); } catch {}
+      try { await t.set('board', 'shared', 'ps-auth-ts', Date.now()); } catch {}
       t.closePopup();
     } catch (e2) {
       btn.disabled = false;
