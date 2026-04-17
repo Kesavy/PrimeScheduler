@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PrimeScheduler Settings</title>
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#0D0D0F;--txt:#F0EFE8;--m:#7A7A88;--ac:#6C5CE7;--rb:rgba(214,48,49,0.14);--rt:#FF7675;--f:'Inter',sans-serif;}
+  html{background:var(--bg);}
+  body{font-family:var(--f);background:var(--bg);color:var(--txt);padding:14px;}
+  .title{font-size:13px;font-weight:600;margin-bottom:4px;}
+  .desc{font-size:11px;color:var(--m);line-height:1.5;margin-bottom:14px;}
+  .btn-revoke{width:100%;padding:10px;background:var(--rb);color:var(--rt);border:1px solid rgba(214,48,49,0.3);border-radius:8px;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;}
+  .btn-revoke:hover{background:rgba(214,48,49,0.22);}
+</style>
+</head>
+<body>
+<div class="title">PrimeScheduler</div>
+<div class="desc">Disconnect your Trello account to remove all stored data and cancel pending scheduled comments.</div>
+<button class="btn-revoke" onclick="revokeAccess()">Disconnect account</button>
+
+<script>
+const BACKEND = 'https://prime-scheduler.vercel.app';
+const APP_KEY = 'e2c0af81ac6b20f973dcb22d8c88f07e';
+
+const t = TrelloPowerUp.iframe({ appKey: APP_KEY, appName: 'PrimeScheduler' });
+
+async function revokeAccess() {
+  if (!confirm('Disconnect your Trello account from PrimeScheduler? All pending scheduled comments will be cancelled.')) return;
+  try {
+    const token    = await t.get('member', 'private', 'pt-token');
+    const member   = await t.member('id');
+    if (token && member?.id) {
+      await fetch(`${BACKEND}/api/revoke`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ memberId: member.id, token }),
+      }).catch(() => {});
+    }
+    await t.set('member', 'private', 'pt-authorized', false);
+    await t.set('member', 'private', 'pt-token',      null);
+    await t.set('member', 'private', 'pt-jobs',       []);
+    t.closePopup();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
