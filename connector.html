@@ -69,12 +69,11 @@ TrelloPowerUp.initialize({
         text:     'Connect to schedule',
         color:    null,
         icon:     ICON_SCHED,
-        dynamic:  true,
         callback: (t) => t.popup({
           title:  'Connect PrimeScheduler',
           url:    './authorize.html',
           height: 200,
-        }).then(() => t.set('board', 'shared', 'ps-badge-refresh', Date.now())).catch(() => {}),
+        }),
       }];
     }
 
