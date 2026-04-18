@@ -56,6 +56,7 @@ function authorize() {
     if (popup) popup.close();
 
     const token = e.data;
+    console.log('[PS] Got message, token:', token ? 'present' : 'missing');
     if (!token || typeof token !== 'string') {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
@@ -75,10 +76,14 @@ function authorize() {
       if (!res.ok) throw new Error(data.error || 'Backend error');
 
       // Store token locally for subsequent API calls
+      console.log('[PS] Saving token...');
       await t.set('member', 'private', 'pt-token', token);
+      console.log('[PS] Token saved');
       await t.set('member', 'private', 'pt-authorized', true);
+      console.log('[PS] Authorized, closing popup');
       try { await t.set('board', 'shared', 'ps-auth-ts', Date.now()); } catch {}
       t.closePopup();
+      console.log('[PS] Done');
     } catch (e2) {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
