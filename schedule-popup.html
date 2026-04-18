@@ -112,7 +112,7 @@
   .feedback.err{display:block;background:var(--rb);color:var(--rt);border:1px solid rgba(214,48,49,.22);}
 
   /* Pending jobs list — scrollable area */
-  #jobs-section{border-top:1px solid var(--b);}
+  #jobs-section{border-top:1px solid var(--b);min-height:36px;}
   .jobs-title{font-size:9px;color:var(--m);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:8px 12px 6px;}
   #jobs-list{max-height:160px;overflow-y:scroll;padding:0 12px 10px;}
   #jobs-list:empty{display:none;}
@@ -204,7 +204,7 @@
   <div class="feedback" id="feedback"></div>
   <div id="paywall-section" style="display:none"></div>
 
-  <div id="jobs-section" style="display:none">
+  <div id="jobs-section">
     <div class="jobs-title">Scheduled comments</div>
     <div id="jobs-list"></div>
   </div>
@@ -491,8 +491,8 @@ async function loadJobs() {
   const sec  = document.getElementById('jobs-section');
   const list = document.getElementById('jobs-list');
 
-  if (!jobs.length) { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
+  list.innerHTML = '';
+  if (!jobs.length) return;
   list.innerHTML = jobs
     .sort((a, b) => new Date(a.sendAt) - new Date(b.sendAt))
     .map(j => `
@@ -506,7 +506,6 @@ async function loadJobs() {
       </div>
     `).join('');
   updatePaywall(active.length);
-  t.sizeTo('#main-section').catch(() => {});
 }
 
 async function cancelJob(jobId) {
