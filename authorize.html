@@ -18,6 +18,8 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .err{margin-top:8px;padding:7px 9px;border-radius:6px;font-size:11px;background:rgba(214,48,49,.14);color:#FF7675;display:none;}
   .err.show{display:block;}
+  .success{margin-top:8px;padding:7px 9px;border-radius:6px;font-size:11px;background:rgba(0,184,148,.12);color:#00B894;display:none;}
+  .success.show{display:block;}
 </style>
 </head>
 <body>
@@ -25,6 +27,7 @@
 <div class="desc">One-time permission to post scheduled comments on your behalf. You can revoke access at any time.</div>
 <button class="btn" id="btn" onclick="authorize()">Connect Trello account</button>
 <div class="err" id="err"></div>
+<div class="success" id="success"></div>
 
 <script>
 const BACKEND    = 'https://prime-scheduler.vercel.app';
@@ -76,14 +79,17 @@ function authorize() {
       if (!res.ok) throw new Error(data.error || 'Backend error');
 
       // Store token locally for subsequent API calls
-      console.log('[PS] Saving token...');
       await t.set('member', 'private', 'pt-token', token);
-      console.log('[PS] Token saved');
       await t.set('member', 'private', 'pt-authorized', true);
-      console.log('[PS] Authorized, closing popup');
       try { await t.set('board', 'shared', 'ps-auth-ts', Date.now()); } catch {}
-      t.closePopup();
-      console.log('[PS] Done');
+      // Zobrazit success místo zavření — uživatel vidí potvrzení
+      btn.disabled = false;
+      btn.textContent = 'Connected ✓';
+      btn.style.background = '#00B894';
+      document.getElementById('success').textContent = 'Account connected. Open any card to start scheduling.';
+      document.getElementById('success').classList.add('show');
+      // Zavřít po 1.5s
+      setTimeout(() => t.closePopup(), 1500);
     } catch (e2) {
       btn.disabled = false;
       btn.textContent = 'Connect Trello account';
