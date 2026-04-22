@@ -14,7 +14,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' https://p.trellocdn.com https://cdn.paddle.com https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://cdn.jsdelivr.net https://trello-members.s3.amazonaws.com; connect-src 'self' https://prime-scheduler.vercel.app https://trello.com https://api.trello.com https://p.trellocdn.com; frame-ancestors https://trello.com https://*.trello.com;"
+          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' https://p.trellocdn.com https://cdn.paddle.com https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://cdn.jsdelivr.net https://trello-members.s3.amazonaws.com; connect-src 'self' https://prime-scheduler.vercel.app https://trello.com https://api.trello.com https://p.trellocdn.com; frame-ancestors https://trello.com https://*.trello.com https://prime-scheduler.vercel.app;"
         },
         {
           "key": "Strict-Transport-Security",
@@ -26,7 +26,7 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://trello.com"
+          "value": "SAMEORIGIN"
         }
       ]
     },
