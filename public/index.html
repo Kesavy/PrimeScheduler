@@ -150,7 +150,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 
   <!-- ── Interactive Demo ── -->
   <div style="padding:0 24px;max-width:560px;margin:48px auto 0;">
-     <iframe src="/demo.html" style="width:100%;height:720px;border:none;border-radius:14px;" scrolling="no"></iframe>
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(45,212,160,0.1);border:1px solid rgba(45,212,160,0.25);border-radius:20px;padding:4px 12px;font-size:11px;color:#2DD4A0;margin-bottom:12px;">● Interactive demo</div>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.4px;margin-bottom:6px;">Try it yourself</h2>
+      <p style="font-size:14px;color:#7A7A88;">Type @ to mention someone, pick a time and hit Schedule.</p>
+    </div>
+    <iframe src="/demo.html" style="width:100%;height:720px;border:none;border-radius:14px;" scrolling="no"></iframe>
   </div>
 
   <div class="features">
@@ -235,6 +240,83 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
     <div class="faq-item">
       <div class="faq-q">Is my Trello token stored securely?</div>
       <div class="faq-a">Yes. Your OAuth token is encrypted with AES-256-GCM and stored on EU servers. You can revoke access at any time from within the Power-Up.</div>
+    </div>
+  </div>
+
+
+  <!-- ── Roadmap ── -->
+  <div style="padding:72px 24px;max-width:960px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:48px;">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(108,92,231,0.12);border:1px solid rgba(108,92,231,0.3);border-radius:20px;padding:5px 14px;font-size:12px;color:#A29BFE;margin-bottom:16px;">⚡ What's coming</div>
+      <h2 style="font-size:32px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px;">Roadmap</h2>
+      <p style="font-size:15px;color:#7A7A88;">Here's what we're building next. Have a suggestion? <a href="mailto:primescheduler.app@gmail.com" style="color:#A29BFE;text-decoration:none;">Let us know.</a></p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+      <!-- Now -->
+      <div style="background:#16161A;border:1px solid rgba(108,92,231,0.4);border-radius:14px;padding:24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6C5CE7,#A29BFE);"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#6C5CE7;box-shadow:0 0 8px #6C5CE7;"></div>
+          <span style="font-size:11px;font-weight:600;color:#A29BFE;text-transform:uppercase;letter-spacing:.08em;">Now — v1.0</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EFE8;">
+            <span style="color:#6C5CE7;font-weight:700;">✓</span> Schedule comments up to 7 days ahead
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EFE8;">
+            <span style="color:#6C5CE7;font-weight:700;">✓</span> @mention autocomplete
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EFE8;">
+            <span style="color:#6C5CE7;font-weight:700;">✓</span> Cancel anytime from the card
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#F0EFE8;">
+            <span style="color:#6C5CE7;font-weight:700;">✓</span> Free tier — first 5 comments free
+          </div>
+        </div>
+      </div>
+
+      <!-- Next -->
+      <div style="background:#16161A;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00B894,#55efc4);"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#00B894;box-shadow:0 0 8px #00B894;"></div>
+          <span style="font-size:11px;font-weight:600;color:#00B894;text-transform:uppercase;letter-spacing:.08em;">Next — v1.1</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#00B894;">→</span> Extended scheduling — up to 30 days
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#00B894;">→</span> Comment templates — save & reuse
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#00B894;">→</span> Delivery confirmation notification
+          </div>
+        </div>
+      </div>
+
+      <!-- Later -->
+      <div style="background:#16161A;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FDCB6E,#e17055);"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#FDCB6E;"></div>
+          <span style="font-size:11px;font-weight:600;color:#FDCB6E;text-transform:uppercase;letter-spacing:.08em;">Later — v2.0</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#FDCB6E;">◌</span> Recurring comments — daily, weekly, monthly
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#FDCB6E;">◌</span> Team plan — one subscription for the whole workspace
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#C8C7C0;">
+            <span style="color:#FDCB6E;">◌</span> Email digest — weekly summary of scheduled comments
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
