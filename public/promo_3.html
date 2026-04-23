@@ -1,575 +1,237 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PrimeScheduler — Promo</title>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-
-html,body{
-  width:800px;height:520px;
-  overflow:hidden;
-  font-family:'Inter',sans-serif;
-  background:#1a1a2e;
-  position:relative;
-}
-
-.sky{
-  position:absolute;inset:0;
-  background:linear-gradient(180deg,#0d0d1a 0%,#1a1a3e 60%,#2d1b4e 100%);
-  transition:background 2.5s ease;
-  z-index:0;
-}
-.sky.day{background:linear-gradient(180deg,#87CEEB 0%,#b8e4f7 60%,#dff2ff 100%);}
-
-.stars-canvas{position:absolute;inset:0;z-index:1;transition:opacity 2s ease;}
-.stars-canvas.hide{opacity:0;}
-
-.moon{
-  position:absolute;top:36px;right:100px;
-  width:50px;height:50px;
-  background:radial-gradient(circle at 35% 35%,#fffff0,#d4c87a);
-  border-radius:50%;
-  box-shadow:0 0 20px rgba(255,255,200,.5),0 0 60px rgba(255,255,200,.15);
-  z-index:2;
-  transition:opacity 1.8s ease,transform 1.8s ease;
-}
-.moon::before{content:'';position:absolute;width:9px;height:9px;background:rgba(0,0,0,.08);border-radius:50%;top:13px;left:26px;}
-.moon::after{content:'';position:absolute;width:6px;height:6px;background:rgba(0,0,0,.06);border-radius:50%;top:25px;left:13px;}
-.moon.hide{opacity:0;transform:translateY(-40px);}
-
-.sun{
-  position:absolute;top:36px;right:100px;
-  width:50px;height:50px;
-  background:radial-gradient(circle,#FFE566,#FFB800);
-  border-radius:50%;
-  box-shadow:0 0 30px rgba(255,200,0,.8),0 0 80px rgba(255,180,0,.35);
-  z-index:2;
-  opacity:0;transform:translateY(40px);
-  transition:opacity 1.8s ease,transform 1.8s ease;
-}
-.sun.show{opacity:1;transform:translateY(0);}
-.sun-ray{
-  position:absolute;width:3px;height:12px;
-  background:rgba(255,200,0,.55);border-radius:2px;
-  left:50%;transform-origin:50% 45px;
-}
-.sun-rays{position:absolute;inset:-18px;animation:spin 8s linear infinite;}
+.stage{width:680px;height:620px;position:relative;overflow:hidden;border-radius:14px;font-family:'Inter',system-ui,sans-serif;background:#0D0D0F;}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#060610 0%,#0e0e28 55%,#180d28 100%);transition:background 3s;z-index:0;}
+.sky.day{background:linear-gradient(180deg,#4a90c4 0%,#87CEEB 60%,#c8e8f5 100%);}
+canvas.stars{position:absolute;inset:0;z-index:1;transition:opacity 2.5s;}
+canvas.stars.hide{opacity:0;}
+.moon{position:absolute;top:24px;right:55px;width:40px;height:40px;background:radial-gradient(circle at 33% 33%,#fffff0,#cfc070);border-radius:50%;z-index:2;transition:opacity 2s,right 3s cubic-bezier(.4,0,.8,1);}
+.moon.hide{opacity:0;right:-70px;}
+.sun{position:absolute;top:24px;left:-70px;width:40px;height:40px;background:radial-gradient(circle,#FFE566,#FFB800);border-radius:50%;z-index:2;opacity:0;transition:opacity 2s,left 3s cubic-bezier(.2,0,.6,1);}
+.sun.show{opacity:1;left:55px;}
+.sray{position:absolute;width:2px;height:9px;background:rgba(255,195,0,.5);border-radius:2px;left:50%;transform-origin:50% 37px;}
+.srays{position:absolute;inset:-14px;animation:spin 8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
+.tt{position:absolute;top:24px;left:50%;transform:translateX(-50%);z-index:10;text-align:center;opacity:0;transition:opacity .5s;}
+.tt.show{opacity:1;}
+.tc{font-size:36px;font-weight:700;color:rgba(255,255,255,.9);letter-spacing:-2px;text-shadow:0 1px 10px rgba(0,0,0,.6);transition:color 2s;font-variant-numeric:tabular-nums;}
+.tc.day{color:rgba(10,35,70,.8);}
+.tl{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-top:1px;transition:color 2s;}
+.tl.day{color:rgba(10,35,70,.35);}
+.hor{position:absolute;bottom:280px;left:0;right:0;height:35px;background:linear-gradient(transparent,rgba(30,8,50,.2));z-index:1;transition:background 3s;}
+.hor.day{background:linear-gradient(transparent,rgba(240,180,60,.08));}
 
-.time-text{
-  position:absolute;top:36px;left:50%;transform:translateX(-50%);
-  z-index:10;text-align:center;
-  opacity:0;transition:opacity .6s;
-}
-.time-text.show{opacity:1;}
-.time-clock{
-  font-size:44px;font-weight:700;color:rgba(255,255,255,.9);
-  letter-spacing:-2px;font-variant-numeric:tabular-nums;
-  text-shadow:0 2px 20px rgba(0,0,0,.5);
-  transition:color 1.5s;
-}
-.time-clock.day{color:rgba(20,50,90,.8);}
-.time-lbl{
-  font-size:11px;color:rgba(255,255,255,.5);
-  text-transform:uppercase;letter-spacing:.1em;margin-top:2px;
-  transition:color 1.5s;
-}
-.time-lbl.day{color:rgba(20,50,90,.4);}
-
-.horizon{
-  position:absolute;bottom:168px;left:0;right:0;height:50px;
-  background:linear-gradient(transparent,rgba(60,20,80,.3));
-  z-index:1;transition:background 2.5s;
-}
-.horizon.day{background:linear-gradient(transparent,rgba(255,200,100,.12));}
-
-/* Card */
-.card-wrap{
-  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-  width:720px;z-index:10;
-}
-.dim{
-  position:absolute;inset:0;background:rgba(0,0,0,.45);
-  z-index:20;opacity:0;transition:opacity .25s;pointer-events:none;
-}
+.scene{position:absolute;bottom:0;left:0;right:0;z-index:10;}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:20;opacity:0;transition:opacity .25s;pointer-events:none;border-radius:12px 12px 0 0;}
 .dim.on{opacity:1;}
 
-.trello-card{
-  background:#282E33;border-radius:16px 16px 0 0;
-  box-shadow:0 -8px 40px rgba(0,0,0,.5);
-  overflow:visible;height:350px;display:flex;flex-direction:column;
-  position:relative;
-}
-
-.card-topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;
-}
-.card-title{font-size:15px;font-weight:600;color:#F0EFE8;display:flex;align-items:center;gap:8px;}
-.card-circle{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-radius:50%;}
-.card-icons{display:flex;gap:12px;}
-.card-icon{font-size:13px;color:rgba(255,255,255,.25);}
-
-.card-body{display:flex;flex:1;overflow:hidden;}
-
-.card-left{flex:1;padding:12px 14px;border-right:1px solid rgba(255,255,255,.07);overflow-y:auto;}
-.card-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.card-btn{
-  background:#2C333A;border-radius:6px;padding:5px 10px;
-  font-size:11px;font-weight:500;color:#9FADBC;
-  border:none;font-family:'Inter',sans-serif;cursor:default;
-}
-.sec-lbl{
-  font-size:10px;font-weight:600;color:#9FADBC;
-  text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;
-}
-.sched-btn{
-  display:inline-flex;align-items:center;gap:7px;
-  background:#2C333A;border-radius:6px;
-  padding:7px 12px;font-size:12px;font-weight:500;color:#9FADBC;
-  border:1px solid rgba(255,255,255,.08);margin-bottom:14px;
-  transition:background .15s,border-color .15s,color .15s;
-  font-family:'Inter',sans-serif;cursor:pointer;
-}
-.sched-btn.hover{background:#384047;border-color:rgba(255,255,255,.18);color:#F0EFE8;}
-.desc-box{
-  background:#2C333A;border-radius:6px;
-  padding:9px 11px;font-size:12px;color:#9FADBC;line-height:1.5;
-}
-
-.card-right{width:270px;padding:12px 14px;overflow-y:auto;flex-shrink:0;}
-.comments-hdr{font-size:13px;font-weight:600;color:#F0EFE8;margin-bottom:10px;}
-.write-box{
-  background:#2C333A;border-radius:8px;
-  padding:9px 11px;font-size:12px;color:#9FADBC;margin-bottom:14px;
-  border:1px solid rgba(255,255,255,.07);
-}
-.comment-item{
-  display:flex;gap:8px;margin-bottom:12px;
-  opacity:0;transform:translateY(6px);transition:opacity .4s,transform .4s;
-}
-.comment-item.show{opacity:1;transform:translateY(0);}
-.c-av{
-  width:26px;height:26px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:700;color:white;flex-shrink:0;margin-top:1px;
-}
-.c-body{flex:1;}
-.c-author{font-size:11px;font-weight:600;color:#F0EFE8;margin-bottom:3px;}
-.c-author span{font-weight:400;color:#9FADBC;font-size:10px;margin-left:5px;}
-.c-text{
-  background:#2C333A;border-radius:0 8px 8px 8px;
-  padding:7px 9px;font-size:11px;color:#B6C2CF;line-height:1.5;
-}
-.c-mention{color:#A29BFE;font-weight:500;}
-
-/* Popup — positioned inside card-wrap */
-.popup{
-  position:absolute;left:10px;bottom:350px;
-  width:268px;
-  background:#282E33;border-radius:10px;
-  box-shadow:0 -4px 32px rgba(0,0,0,.7),0 8px 32px rgba(0,0,0,.4);
-  overflow:hidden;
-  opacity:0;transform:scale(.94) translateY(6px);
-  transition:opacity .25s,transform .25s;
-  z-index:30;
-}
+.popup{position:absolute;left:30px;top:16px;width:270px;background:#0D0D0F;border:1px solid rgba(255,255,255,.1);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.9);overflow:hidden;opacity:0;transform:scale(.93) translateY(-4px);transition:opacity .25s,transform .25s;z-index:30;}
 .popup.show{opacity:1;transform:scale(1) translateY(0);}
-.p-bar{
-  background:#1D2125;padding:9px 13px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.p-title{font-size:12px;font-weight:600;color:#F0EFE8;}
-.p-x{color:#9FADBC;font-size:13px;}
-.p-body{padding:11px;}
-.p-chip{
-  background:#1D2125;border:1px solid rgba(255,255,255,.08);
-  border-radius:6px;padding:5px 9px;font-size:11px;
-  display:flex;align-items:center;gap:6px;color:#9FADBC;margin-bottom:9px;
-}
-.p-chip-dot{width:6px;height:6px;border-radius:50%;background:#6C5CE7;}
-.p-lbl{font-size:9px;color:#9FADBC;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px;}
-.p-ta{
-  width:100%;background:#1D2125;
-  border:1px solid rgba(255,255,255,.08);border-radius:6px;
-  padding:7px 9px;font-size:11px;font-family:'Inter',sans-serif;
-  color:#F0EFE8;resize:none;height:52px;margin-bottom:9px;
-  transition:border-color .2s;
-}
-.p-ta.focus{border-color:#6C5CE7;}
-.p-ta::placeholder{color:#9FADBC;}
-.p-grid{display:grid;grid-template-columns:1fr 50px 50px;gap:5px;margin-bottom:4px;}
-.p-sel{
-  background:#1D2125;border:1px solid rgba(255,255,255,.08);
-  border-radius:6px;padding:5px 7px;font-size:11px;color:#F0EFE8;
-  display:flex;align-items:center;justify-content:space-between;
-  transition:border-color .2s,color .2s;cursor:pointer;
-}
-.p-sel.active{border-color:#6C5CE7;color:#A29BFE;}
-.fdd{display:none;position:absolute;bottom:100%;left:0;right:0;background:#1D2125;border:1px solid #6C5CE7;border-bottom:none;border-radius:6px 6px 0 0;z-index:50;}
-.fdd-item{padding:5px 8px;font-size:11px;color:#9FADBC;cursor:pointer;}
-.fdd-item.sel{color:#A29BFE;background:rgba(108,92,231,.15);}
-.p-hint{font-size:9px;color:#9FADBC;margin-bottom:9px;}
-.p-btn{
-  width:100%;padding:8px;background:#6C5CE7;color:white;
-  border:none;border-radius:7px;font-size:12px;font-weight:600;
-  font-family:'Inter',sans-serif;cursor:pointer;margin-bottom:9px;
-  transition:background .2s;
-}
-.p-btn.ok{background:#00B894;}
-.p-jobs-title{
-  font-size:9px;color:#9FADBC;text-transform:uppercase;
-  letter-spacing:.08em;font-weight:600;
-  border-top:1px solid rgba(255,255,255,.07);padding-top:7px;margin-bottom:5px;
-}
-.p-job{
-  display:flex;align-items:center;gap:7px;
-  opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s;
-}
-.p-job.show{opacity:1;transform:translateX(0);}
-.p-jdot{width:6px;height:6px;border-radius:50%;background:#6C5CE7;flex-shrink:0;}
+.pbar{background:#16161A;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);}
+.ptitle{font-size:13px;font-weight:600;color:#F0EFE8;}
+.px{color:#7A7A88;font-size:16px;}
+.pbody{padding:10px 12px;}
+.pchip{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding:5px 8px;background:#1E1E24;border:1px solid rgba(255,255,255,.14);border-radius:7px;}
+.pdot{width:7px;height:7px;border-radius:50%;background:#6C5CE7;flex-shrink:0;}
+.pchipname{font-size:12px;color:#F0EFE8;font-weight:500;}
+.pmember{display:flex;align-items:center;gap:7px;margin-bottom:9px;padding:5px 8px;background:#1E1E24;border:1px solid rgba(255,255,255,.14);border-radius:7px;}
+.pmav{width:22px;height:22px;border-radius:50%;background:#6C5CE7;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;flex-shrink:0;}
+.pmname{font-size:12px;font-weight:500;color:#F0EFE8;}
+.plbl{font-size:10px;color:#7A7A88;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:4px;}
+.pta{width:100%;background:#1E1E24;border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:7px 9px;font-size:12px;font-family:inherit;color:#F0EFE8;resize:none;height:50px;margin-bottom:9px;outline:none;transition:border-color .2s;}
+.pta.focus{border-color:#6C5CE7;}
+.pta::placeholder{color:#7A7A88;}
+.dtrow{display:grid;grid-template-columns:1fr 64px 64px;gap:6px;margin-bottom:4px;}
+.dtcol{display:flex;flex-direction:column;gap:3px;}
+.dtcollbl{font-size:9px;color:#7A7A88;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+.dtwrap{position:relative;}
+.dtval{background:#1E1E24;border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:6px 8px;font-size:12px;color:#F0EFE8;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .2s;}
+.dtval.open{border-color:#6C5CE7;border-radius:0 0 7px 7px;}
+.dtarr{font-size:8px;color:#7A7A88;}
+.fdd{display:none;position:absolute;bottom:100%;left:0;right:0;background:#1E1E24;border:1px solid #6C5CE7;border-bottom:none;border-radius:7px 7px 0 0;z-index:50;overflow:hidden;}
+.fdi{padding:5px 8px;font-size:11px;color:#7A7A88;cursor:pointer;}
+.fdi.sel{color:#A29BFE;background:rgba(108,92,231,.12);}
+.phint{font-size:10px;color:#7A7A88;margin-bottom:9px;}
+.pbtn{width:100%;padding:9px;background:#6C5CE7;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:9px;transition:background .2s;}
+.pbtn.ok{background:#00B894;}
+.pjsec{border-top:1px solid rgba(255,255,255,.08);padding-top:8px;margin-bottom:8px;}
+.pjlbl{font-size:9px;color:#7A7A88;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:5px;}
+.pjitem{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);opacity:0;transform:translateX(-4px);transition:opacity .3s,transform .3s;}
+.pjitem.show{opacity:1;transform:translateX(0);}
+.pjdot{width:6px;height:6px;border-radius:50%;background:#6C5CE7;flex-shrink:0;}
+.pjtxt{font-size:11px;font-weight:500;color:#F0EFE8;flex:1;}
+.pjtime{font-size:10px;color:#7A7A88;}
+.pjx{background:none;border:none;color:#7A7A88;font-size:14px;cursor:pointer;line-height:1;}
+.pdisconn{text-align:center;}<br>.pdisconnlnk{font-size:11px;color:#7A7A88;text-decoration:underline;cursor:pointer;}
 
-/* Cursor */
-.cursor{
-  position:fixed;width:20px;height:20px;
-  z-index:1000;pointer-events:none;opacity:0;
-  transition:left .5s cubic-bezier(.4,0,.2,1),top .5s cubic-bezier(.4,0,.2,1);
-}
+.tcard{background:#16161A;border-radius:12px 12px 0 0;border:1px solid rgba(255,255,255,.06);border-bottom:none;display:flex;flex-direction:column;height:440px;}
+.ctop{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.ctitle{font-size:14px;font-weight:600;color:#F0EFE8;display:flex;align-items:center;gap:8px;}
+.ccirc{width:14px;height:14px;border:2px solid rgba(255,255,255,.22);border-radius:50%;}
+.cbody{display:flex;flex:1;overflow:hidden;}
+.cleft{flex:1;padding:12px 14px;border-right:1px solid rgba(255,255,255,.06);overflow-y:auto;}
+.cbtns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.cbtn{background:#1E1E24;border-radius:5px;padding:4px 9px;font-size:10px;font-weight:500;color:#7A7A88;border:1px solid rgba(255,255,255,.08);font-family:inherit;}
+.cseclbl{font-size:10px;color:#7A7A88;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.sbtn{display:inline-flex;align-items:center;gap:6px;background:#1E1E24;border-radius:6px;padding:6px 11px;font-size:12px;font-weight:500;color:#7A7A88;border:1px solid rgba(255,255,255,.08);cursor:pointer;font-family:inherit;transition:background .15s,color .15s;margin-bottom:12px;}
+.sbtn.hover{background:#26262E;color:#F0EFE8;}
+.dbox{background:#1E1E24;border-radius:6px;padding:8px 10px;font-size:11px;color:#7A7A88;line-height:1.5;}
+.cright{width:258px;padding:12px 14px;flex-shrink:0;overflow-y:auto;}
+.chdr{font-size:12px;font-weight:600;color:#F0EFE8;margin-bottom:10px;}
+.wbox{background:#1E1E24;border-radius:7px;padding:9px 11px;font-size:12px;color:#7A7A88;margin-bottom:14px;border:1px solid rgba(255,255,255,.07);}
+.citem{display:flex;gap:8px;margin-bottom:11px;opacity:0;transform:translateY(5px);transition:opacity .4s,transform .4s;}
+.citem.show{opacity:1;transform:translateY(0);}
+.cav{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;flex-shrink:0;margin-top:1px;}
+.cauthor{font-size:11px;font-weight:600;color:#F0EFE8;margin-bottom:2px;}
+.ctime2{font-weight:400;color:#7A7A88;font-size:10px;margin-left:5px;}
+.ctext{background:#1E1E24;border-radius:0 7px 7px 7px;padding:7px 9px;font-size:11px;color:#C8C7C0;line-height:1.5;}
+.cmention{color:#A29BFE;font-weight:500;}
+
+.cursor{position:absolute;width:18px;height:18px;z-index:500;pointer-events:none;opacity:0;transition:left .5s cubic-bezier(.4,0,.2,1),top .5s cubic-bezier(.4,0,.2,1);}
 .cursor.show{opacity:1;}
-.cursor svg{width:20px;height:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6));}
-
-.ripple{
-  position:fixed;width:26px;height:26px;border-radius:50%;
-  background:rgba(108,92,231,.35);z-index:999;pointer-events:none;
-  opacity:0;transform:scale(0);transition:transform .2s,opacity .2s;
-}
-.ripple.pop{opacity:1;transform:scale(1);}
-
-.wm{
-  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;gap:6px;z-index:600;
-  opacity:0;transition:opacity .4s;
-}
-.wm.show{opacity:.7;}
-.wm-icon{width:16px;height:16px;background:#6C5CE7;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;}
-.wm-txt{font-size:11px;color:rgba(255,255,255,.7);font-weight:500;}
-
-.replay-btn{
-  position:fixed;bottom:14px;right:14px;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-  color:white;padding:7px 16px;border-radius:8px;
-  font-size:12px;font-weight:500;font-family:'Inter',sans-serif;
-  cursor:pointer;z-index:600;opacity:0;transition:opacity .3s;
-}
-.replay-btn.show{opacity:1;}
+.rip{position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(108,92,231,.3);z-index:499;pointer-events:none;opacity:0;transform:scale(0);transition:transform .2s,opacity .2s;}
+.rip.pop{opacity:1;transform:scale(1);}
+.wm{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;z-index:600;opacity:0;transition:opacity .4s;}
+.wm.show{opacity:.6;}
+.wmico{width:14px;height:14px;background:#6C5CE7;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:7px;color:white;}
+.wmtxt{font-size:10px;color:rgba(255,255,255,.6);font-weight:500;}
+.rb{position:absolute;bottom:8px;right:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:500;font-family:inherit;cursor:pointer;z-index:600;opacity:0;transition:opacity .3s;}
+.rb.show{opacity:1;}
 </style>
-</head>
-<body>
 
-<div class="sky" id="sky"></div>
-<canvas class="stars-canvas" id="stars" width="800" height="520"></canvas>
-<div class="moon" id="moon"></div>
-<div class="sun" id="sun"><div class="sun-rays" id="rays"></div></div>
+<div class="stage" id="stage">
+  <div class="sky" id="sky"></div>
+  <canvas class="stars" id="stars" width="680" height="620"></canvas>
+  <div class="moon" id="moon"></div>
+  <div class="sun" id="sun"><div class="srays" id="srays"></div></div>
+  <div class="tt" id="tt"><div class="tc" id="tc">21:47</div><div class="tl" id="tl">Evening</div></div>
+  <div class="hor" id="hor"></div>
 
-<div class="time-text" id="tt">
-  <div class="time-clock" id="tc">21:47</div>
-  <div class="time-lbl" id="tl">Evening</div>
-</div>
-<div class="horizon" id="horizon"></div>
-
-<div class="card-wrap" id="cardWrap">
-  <div class="dim" id="dim"></div>
-
-  <!-- Popup inside card-wrap so it floats above card -->
-  <div class="popup" id="popup">
-    <div class="p-bar"><div class="p-title">PrimeScheduler</div><div class="p-x">✕</div></div>
-    <div class="p-body">
-      <div class="p-chip"><div class="p-chip-dot"></div> Q3 Launch Checklist</div>
-      <div class="p-lbl">Comment text</div>
-      <textarea class="p-ta" id="pta" placeholder="Write your comment… type @ to mention someone" readonly></textarea>
-      <div class="p-lbl">Send at</div>
-      <div class="p-grid">
-        <div style="position:relative;">
-          <div class="p-sel" id="sd">Tomorrow <span style="opacity:.4;font-size:8px">▾</span></div>
-          <div class="fdd" id="fdd-d">
-            <div class="fdd-item">Today</div>
-            <div class="fdd-item sel">Tomorrow</div>
-            <div class="fdd-item">In 2 days</div>
-          </div>
+  <div class="scene" id="scene">
+    <div class="dim" id="dim"></div>
+    <div class="popup" id="popup">
+      <div class="pbar"><div class="ptitle">PrimeScheduler</div><div class="px">×</div></div>
+      <div class="pbody">
+        <div class="pchip"><div class="pdot"></div><div class="pchipname">Q3 Launch Checklist</div></div>
+        <div class="pmember"><div class="pmav">VB</div><div class="pmname">Václav Burian</div></div>
+        <div class="plbl">Comment text</div>
+        <textarea class="pta" id="pta" placeholder="Write your comment… type @ to mention someone" readonly></textarea>
+        <div class="plbl">Send at</div>
+        <div class="dtrow">
+          <div class="dtcol"><div class="dtcollbl">Day</div><div class="dtwrap"><div class="dtval" id="vd">Today<span class="dtarr">▾</span></div><div class="fdd" id="fdd"><div class="fdi">Today</div><div class="fdi sel">Tomorrow</div><div class="fdi">In 2 days</div></div></div></div>
+          <div class="dtcol"><div class="dtcollbl">Hour</div><div class="dtwrap"><div class="dtval" id="vh">09<span class="dtarr">▾</span></div><div class="fdd" id="fdh"><div class="fdi">08</div><div class="fdi sel">09</div><div class="fdi">10</div></div></div></div>
+          <div class="dtcol"><div class="dtcollbl">Min</div><div class="dtwrap"><div class="dtval" id="vm">00<span class="dtarr">▾</span></div><div class="fdd" id="fdm"><div class="fdi sel">00</div><div class="fdi">15</div><div class="fdi">30</div></div></div></div>
         </div>
-        <div style="position:relative;">
-          <div class="p-sel" id="sh">09 <span style="opacity:.4;font-size:8px">▾</span></div>
-          <div class="fdd" id="fdd-h">
-            <div class="fdd-item">08</div>
-            <div class="fdd-item sel">09</div>
-            <div class="fdd-item">10</div>
-          </div>
+        <div class="phint">Max 7 days ahead · your local timezone</div>
+        <button class="pbtn" id="pbtn">Schedule</button>
+        <div class="pjsec">
+          <div class="pjlbl">Scheduled comments</div>
+          <div class="pjitem" id="pji"><div class="pjdot"></div><div style="flex:1"><div class="pjtxt" id="pjt"></div><div class="pjtime">Tomorrow · 09:00</div></div><button class="pjx">×</button></div>
         </div>
-        <div style="position:relative;">
-          <div class="p-sel" id="sm">00 <span style="opacity:.4;font-size:8px">▾</span></div>
-          <div class="fdd" id="fdd-m">
-            <div class="fdd-item sel">00</div>
-            <div class="fdd-item">15</div>
-            <div class="fdd-item">30</div>
-          </div>
-        </div>
+        <div class="pdisconn"><span class="pdisconnlnk">Disconnect account</span></div>
       </div>
-      <div class="p-hint">Max 7 days ahead · your local timezone</div>
-      <button class="p-btn" id="pbtn">Schedule</button>
-      <div class="p-jobs-title">Scheduled comments</div>
-      <div class="p-job" id="pjob">
-        <div class="p-jdot"></div>
-        <div>
-          <div style="font-size:10px;font-weight:500;color:#F0EFE8;" id="pjt"></div>
-          <div style="font-size:10px;color:#9FADBC;">Tomorrow · 09:00</div>
+    </div>
+
+    <div class="tcard">
+      <div class="ctop">
+        <div class="ctitle"><div class="ccirc"></div>Q3 Launch Checklist</div>
+        <div style="display:flex;gap:12px;font-size:13px;color:rgba(255,255,255,.2)"><span>⊞</span><span>···</span><span>✕</span></div>
+      </div>
+      <div class="cbody">
+        <div class="cleft">
+          <div class="cbtns"><button class="cbtn">+ Add</button><button class="cbtn">Labels</button><button class="cbtn">Dates</button><button class="cbtn">Checklist</button><button class="cbtn">Members</button></div>
+          <div class="cseclbl">Schedule comment</div>
+          <button class="sbtn" id="sbtn"><span style="font-size:13px">⏰</span><span id="sbt">Schedule</span></button>
+          <div class="cseclbl">Description</div>
+          <div class="dbox">Final checklist before Q3 launch. Review all items before EOD Friday.</div>
+        </div>
+        <div class="cright">
+          <div class="chdr">💬 Comments and activity</div>
+          <div class="wbox">Write a comment…</div>
+          <div id="comments"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="trello-card">
-    <div class="card-topbar">
-      <div class="card-title"><div class="card-circle"></div>Q3 Launch Checklist</div>
-      <div class="card-icons">
-        <span class="card-icon">⊞</span>
-        <span class="card-icon">···</span>
-        <span class="card-icon">✕</span>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="card-left">
-        <div class="card-btns">
-          <button class="card-btn">+ Add</button>
-          <button class="card-btn">🏷 Labels</button>
-          <button class="card-btn">📅 Dates</button>
-          <button class="card-btn">👤 Members</button>
-        </div>
-        <div class="sec-lbl">⏰ Schedule comment</div>
-        <button class="sched-btn" id="schedBtn"><span>⏰</span><span id="sbt">Schedule</span></button>
-        <div class="sec-lbl">≡ Description</div>
-        <div class="desc-box">Final checklist before the Q3 product launch. Review all items before EOD Friday.</div>
-      </div>
-      <div class="card-right">
-        <div class="comments-hdr">💬 Comments and activity</div>
-        <div class="write-box">Write a comment…</div>
-        <div id="comments"></div>
-      </div>
-    </div>
-  </div>
+  <div class="cursor" id="cur"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 4l7.5 18 3-7.5L22 11.5z" fill="white" stroke="rgba(0,0,0,0.5)" stroke-width="0.5"/></svg></div>
+  <div class="rip" id="rip"></div>
+  <div class="wm" id="wm"><div class="wmico">⏰</div><div class="wmtxt">PrimeScheduler</div></div>
+  <button class="rb" id="rb">↺ Replay</button>
 </div>
-
-<div class="cursor" id="cursor">
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 4l7.5 18 3-7.5L22 11.5z" fill="white" stroke="rgba(0,0,0,0.3)" stroke-width="0.5"/>
-  </svg>
-</div>
-<div class="ripple" id="ripple"></div>
-
-<div class="wm" id="wm">
-  <div class="wm-icon">⏰</div>
-  <div class="wm-txt">PrimeScheduler</div>
-</div>
-<button class="replay-btn" id="rb" onclick="run()">↺ Replay</button>
 
 <script>
 const $=id=>document.getElementById(id);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-
-// Stars
-(function(){
-  const c=$('stars'), ctx=c.getContext('2d');
-  for(let i=0;i<130;i++){
-    ctx.beginPath();
-    ctx.arc(Math.random()*800,Math.random()*300,Math.random()*1.4+.2,0,Math.PI*2);
-    ctx.fillStyle=`rgba(255,255,255,${Math.random()*.7+.3})`;
-    ctx.fill();
-  }
-})();
-
-// Sun rays
-(function(){
-  const w=$('rays');
-  for(let i=0;i<12;i++){
-    const d=document.createElement('div');
-    d.className='sun-ray';
-    d.style.transform=`rotate(${i*30}deg)`;
-    w.appendChild(d);
-  }
-})();
-
-function cur(x,y){$('cursor').style.left=x+'px';$('cursor').style.top=y+'px';}
-function click(x,y){
-  cur(x,y);
-  const r=$('ripple');
-  r.style.left=(x-3)+'px';r.style.top=(y-3)+'px';
-  r.classList.add('pop');
-  setTimeout(()=>r.classList.remove('pop'),220);
+(function(){const c=$('stars'),x=c.getContext('2d');for(let i=0;i<130;i++){x.beginPath();x.arc(Math.random()*680,Math.random()*300,Math.random()*1.3+.2,0,Math.PI*2);x.fillStyle=`rgba(255,255,255,${Math.random()*.7+.3})`;x.fill();}})();
+(function(){const w=$('srays');for(let i=0;i<12;i++){const d=document.createElement('div');d.className='sray';d.style.transform=`rotate(${i*30}deg)`;w.appendChild(d);}})();
+const stage=$('stage');
+function ex(el){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();return r.left-s.left+r.width/2;}
+function ey(el){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();return r.top-s.top+r.height/2;}
+function cur(x,y){$('cur').style.left=x+'px';$('cur').style.top=y+'px';}
+function click(x,y){cur(x,y);const r=$('rip');r.style.left=(x-3)+'px';r.style.top=(y-3)+'px';r.classList.add('pop');setTimeout(()=>r.classList.remove('pop'),220);}
+async function type(el,text,spd=44){el.value='';for(const ch of text){el.value+=ch;await wait(spd+Math.random()*18);}}
+async function pickDd(vid,did,idx){
+  const v=$(vid),d=$(did);
+  cur(ex(v),ey(v));await wait(300);click(ex(v),ey(v));v.classList.add('open');d.style.display='block';await wait(580);
+  const it=d.querySelectorAll('.fdi')[idx];cur(ex(it),ey(it));await wait(260);click(ex(it),ey(it));d.style.display='none';v.classList.remove('open');await wait(200);
 }
-
-async function type(el,text,spd=48){
-  el.value='';
-  for(const ch of text){el.value+=ch;await wait(spd+Math.random()*22);}
-}
-
-function rect(el){return el.getBoundingClientRect();}
-function cx(el){return rect(el).left+rect(el).width/2;}
-function cy(el){return rect(el).top+rect(el).height/2;}
-
 async function run(){
-  // Reset
-  $('rb').classList.remove('show');
-  $('wm').classList.remove('show');
-  $('popup').classList.remove('show');
-  $('dim').classList.remove('show').classList;
-  $('dim').classList.remove('on');
-  $('cursor').classList.remove('show');
-  $('pjob').classList.remove('show');
-  $('pbtn').className='p-btn';$('pbtn').textContent='Schedule';
-  $('pta').value='';$('pta').className='p-ta';
-  $('sd').className='p-sel';$('sh').className='p-sel';$('sm').className='p-sel';
-  ['fdd-d','fdd-h','fdd-m'].forEach(id=>$(id).style.display='none');
-  $('comments').innerHTML='';
-  $('sbt').textContent='Schedule';$('schedBtn').classList.remove('hover');
-  $('tt').classList.remove('show');
-  $('tc').className='time-clock';$('tl').className='time-lbl';
-  $('sky').className='sky';$('horizon').className='horizon';
+  $('rb').classList.remove('show');$('wm').classList.remove('show');
+  $('popup').classList.remove('show');$('dim').classList.remove('on');
+  $('cur').classList.remove('show');$('pji').classList.remove('show');
+  $('pbtn').className='pbtn';$('pbtn').textContent='Schedule';
+  $('pta').value='';$('pta').className='pta';
+  [$('vd'),$('vh'),$('vm')].forEach(e=>e.classList.remove('open'));
+  [$('fdd'),$('fdh'),$('fdm')].forEach(e=>e.style.display='none');
+  $('comments').innerHTML='';$('sbt').textContent='Schedule';$('sbtn').classList.remove('hover');
+  $('tt').classList.remove('show');$('tc').className='tc';$('tl').className='tl';
+  $('sky').className='sky';$('hor').className='hor';
   $('stars').style.opacity='1';$('stars').style.transition='';
   $('moon').className='moon';$('sun').className='sun';
   $('tc').textContent='21:47';$('tl').textContent='Evening';
+  $('rb').onclick=run;
 
-  await wait(800);
-  $('cursor').classList.add('show');
-  cur(200, 450);
-  await wait(500);
-
-  // Hover over schedule button
-  const sb=$('schedBtn');
-  cur(cx(sb)-8, cy(sb)-35);
-  await wait(400);
-  sb.classList.add('hover');
-  cur(cx(sb)-8, cy(sb)-8);
-  await wait(500);
-  click(cx(sb)-8, cy(sb)-8);
-  await wait(180);
-
-  // Open popup
-  $('dim').classList.add('on');
-  $('popup').classList.add('show');
-  await wait(700);
-
-  // Click textarea
-  const ta=$('pta');
-  cur(cx(ta)-8, cy(ta)-35);
-  await wait(350);
-  cur(cx(ta)-8, cy(ta)-8);
-  await wait(300);
-  click(cx(ta)-8, cy(ta)-8);
-  ta.classList.add('focus');
-  await wait(300);
-
-  await type(ta,'@martin heads up — goes live tomorrow 🚀');
-  $('pjt').textContent='@martin heads up — goes li…';
-  await wait(500);
-
-  // Day selector
-  cur(cx($('sd'))-8, cy($('sd'))-8);
-  await wait(350); click(cx($('sd'))-8, cy($('sd'))-8);
-  $('sd').classList.add('active'); $('fdd-d').style.display='block';
-  await wait(600);
-  const di=$('fdd-d').querySelectorAll('.fdd-item')[1];
-  cur(cx(di)-8, cy(di)-8); await wait(300); click(cx(di)-8, cy(di)-8);
-  $('fdd-d').style.display='none'; await wait(250);
-
-  // Hour
-  cur(cx($('sh'))-8, cy($('sh'))-8);
-  await wait(350); click(cx($('sh'))-8, cy($('sh'))-8);
-  $('sh').classList.add('active'); $('fdd-h').style.display='block';
-  await wait(600);
-  const hi=$('fdd-h').querySelectorAll('.fdd-item')[1];
-  cur(cx(hi)-8, cy(hi)-8); await wait(300); click(cx(hi)-8, cy(hi)-8);
-  $('fdd-h').style.display='none'; await wait(250);
-
-  // Min
-  cur(cx($('sm'))-8, cy($('sm'))-8);
-  await wait(350); click(cx($('sm'))-8, cy($('sm'))-8);
-  $('sm').classList.add('active'); $('fdd-m').style.display='block';
-  await wait(600);
-  const mi=$('fdd-m').querySelectorAll('.fdd-item')[0];
-  cur(cx(mi)-8, cy(mi)-8); await wait(300); click(cx(mi)-8, cy(mi)-8);
-  $('fdd-m').style.display='none'; await wait(350);
-
-  // Schedule btn
-  cur(cx($('pbtn'))-8,cy($('pbtn'))-8);
-  await wait(380);click(cx($('pbtn'))-8,cy($('pbtn'))-8);
-  $('pbtn').classList.add('ok');$('pbtn').textContent='✓ Scheduled!';
-  $('pjob').classList.add('show');
-  $('sbt').textContent='1 scheduled';
-  await wait(1300);
-
-  // Close popup
-  $('popup').classList.remove('show');
-  $('dim').classList.remove('on');
-  $('cursor').classList.remove('show');
-  await wait(600);
-
-  // Night → Day
-  $('tt').classList.add('show');
   await wait(900);
+  $('cur').classList.add('show');cur(200,550);await wait(500);
 
+  const sb=$('sbtn');
+  cur(ex(sb),ey(sb)-28);await wait(380);sb.classList.add('hover');
+  cur(ex(sb),ey(sb));await wait(460);click(ex(sb),ey(sb));await wait(160);
+
+  $('dim').classList.add('on');$('popup').classList.add('show');await wait(700);
+
+  const ta=$('pta');
+  cur(ex(ta),ey(ta)-20);await wait(300);cur(ex(ta),ey(ta));await wait(260);
+  click(ex(ta),ey(ta));ta.classList.add('focus');await wait(260);
+  await type(ta,'@martin heads up — goes live tomorrow 🚀');
+  $('pjt').textContent='@martin heads up — goes li…';await wait(500);
+
+  await pickDd('vd','fdd',1);
+  await pickDd('vh','fdh',1);
+  await pickDd('vm','fdm',0);
+
+  const pb=$('pbtn');cur(ex(pb),ey(pb));await wait(340);click(ex(pb),ey(pb));
+  pb.classList.add('ok');pb.textContent='✓ Scheduled!';$('pji').classList.add('show');$('sbt').textContent='1 scheduled';await wait(1300);
+
+  $('popup').classList.remove('show');$('dim').classList.remove('on');$('cur').classList.remove('show');await wait(700);
+
+  $('tt').classList.add('show');await wait(900);
   const seq=[[21,47],[22,0],[23,0],[0,0],[2,0],[4,0],[5,30],[6,0],[7,0],[8,0],[8,30],[9,0]];
-  for(let i=0;i<seq.length;i++){
-    const[h,m]=seq[i];
+  for(const[h,m]of seq){
     $('tc').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-    if(h===6){
-      $('sky').classList.add('day');
-      $('horizon').classList.add('day');
-      $('stars').style.transition='opacity 2.5s';
-      $('stars').style.opacity='0';
-      $('moon').classList.add('hide');
-      $('sun').classList.add('show');
-      $('tc').classList.add('day');
-      $('tl').classList.add('day');
-      $('tl').textContent='Morning';
-    }
-    await wait(h>=5?220:110);
+    if(h===6){$('sky').classList.add('day');$('hor').classList.add('day');$('stars').style.transition='opacity 2.5s';$('stars').style.opacity='0';$('moon').classList.add('hide');$('sun').classList.add('show');$('tc').classList.add('day');$('tl').classList.add('day');$('tl').textContent='Morning';}
+    await wait(h>=5?210:100);
   }
-  $('tc').textContent='09:00';
-  $('tl').textContent='Comment sent ✓';
-  await wait(1100);
-  $('tt').classList.remove('show');
-  await wait(500);
+  $('tc').textContent='09:00';$('tl').textContent='Comment sent ✓';await wait(1100);
+  $('tt').classList.remove('show');await wait(500);
 
-  // Comments appear
   $('comments').innerHTML=`
-    <div class="comment-item" id="c1">
-      <div class="c-av" style="background:#6C5CE7">VB</div>
-      <div class="c-body">
-        <div class="c-author">Václav <span>Today at 09:00</span></div>
-        <div class="c-text"><span class="c-mention">@martin</span> heads up — goes live tomorrow 🚀</div>
-      </div>
-    </div>
-    <div class="comment-item" id="c2">
-      <div class="c-av" style="background:#00B894">M</div>
-      <div class="c-body">
-        <div class="c-author">Martin <span>Today at 09:04</span></div>
-        <div class="c-text">👍 on it, thanks for the heads up!</div>
-      </div>
-    </div>`;
-
-  await wait(300);
-  $('c1').classList.add('show');
-  await wait(700);
-  $('c2').classList.add('show');
-  await wait(800);
-  $('wm').classList.add('show');
-  await wait(400);
-  $('rb').classList.add('show');
+    <div class="citem" id="c1"><div class="cav" style="background:#6C5CE7">VB</div><div><div class="cauthor">Václav<span class="ctime2">Today at 09:00</span></div><div class="ctext"><span class="cmention">@martin</span> heads up — goes live tomorrow 🚀</div></div></div>
+    <div class="citem" id="c2"><div class="cav" style="background:#00B894">M</div><div><div class="cauthor">Martin<span class="ctime2">Today at 09:04</span></div><div class="ctext">👍 on it, thanks for the heads up!</div></div></div>`;
+  await wait(250);$('c1').classList.add('show');await wait(650);$('c2').classList.add('show');
+  await wait(800);$('wm').classList.add('show');await wait(350);$('rb').classList.add('show');
 }
-
-window.onload=()=>setTimeout(run,500);
+setTimeout(run,600);
 </script>
-</body>
-</html>
