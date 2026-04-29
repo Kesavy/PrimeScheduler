@@ -23,11 +23,15 @@
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
         }
       ]
     },
     {
-      "source": "/(.*\\.html)",
+      "source": "/((?!demo\\.html).*\\.html)",
       "headers": [
         {
           "key": "Content-Security-Policy",
