@@ -31,7 +31,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com https://public.profitwell.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.paddle.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://prime-scheduler.vercel.app https://cdn.paddle.com; frame-src 'self' https://prime-scheduler.vercel.app; frame-ancestors 'none';"
+          "value": "default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com https://public.profitwell.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.paddle.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://prime-scheduler.vercel.app https://cdn.paddle.com; frame-src 'self' https://prime-scheduler.vercel.app https://buy.paddle.com https://*.paddle.com; frame-ancestors 'none';"
         },
         {
           "key": "Strict-Transport-Security",
